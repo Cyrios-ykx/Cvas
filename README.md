@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./public/Vuvas.png" alt="Vuvas Logo" width="180" />
+</p>
+
 # Vuvas
 
 > /vjuːvæs/ — **V**(ue) + Canvas
