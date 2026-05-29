@@ -1,5 +1,7 @@
 # Vuvas
 
+> /vjuːvæs/ — **V**(ue) + Canvas
+
 **English** | [中文](./README.zh-CN.md)
 
 <p align="center">

@@ -3,18 +3,33 @@ import { CanvasNode, TextNode, ButtonNode, parseSpacing, type LayoutBox } from '
 /**
  * 布局引擎 - 简化版 Flexbox 实现
  * 负责计算每个节点的最终位置和尺寸
+ *
+ * 核心流程：
+ * 1. 自底向上测量（measure）：计算每个节点的期望尺寸
+ * 2. 自顶向下布局（layout）：根据父容器约束分配最终位置
  */
 export class LayoutEngine {
   /**
    * 计算整棵节点树的布局
    */
   computeLayout(root: CanvasNode, containerWidth: number, containerHeight: number): void {
-    // 根节点占满容器
+    const rootWidth = root.style.width ?? containerWidth
+
+    // 根节点高度：如果未指定，先用内容自适应高度，再取与视口高度的较大值
+    let rootHeight: number
+    if (root.style.height !== undefined) {
+      rootHeight = root.style.height
+    } else {
+      // 先测量内容高度
+      const contentHeight = this.measureContentHeight(root, rootWidth)
+      rootHeight = Math.max(contentHeight, containerHeight)
+    }
+
     root.layout = {
       x: 0,
       y: 0,
-      width: root.style.width ?? containerWidth,
-      height: root.style.height ?? containerHeight
+      width: rootWidth,
+      height: rootHeight
     }
     this.layoutNode(root)
   }
@@ -40,7 +55,7 @@ export class LayoutEngine {
     const align = style.alignItems || 'stretch'
     const gap = style.gap || 0
 
-    // 计算子节点尺寸
+    // 计算子节点尺寸（递归测量）
     const childSizes = node.children.map(child => this.measureNode(child, contentWidth, contentHeight))
 
     if (direction === 'row') {
@@ -49,14 +64,15 @@ export class LayoutEngine {
       this.layoutColumn(node.children, childSizes, contentX, contentY, contentWidth, contentHeight, justify, align, gap)
     }
 
-    // 递归处理子节点
+    // 递归处理子节点的子节点
     for (const child of node.children) {
       this.layoutNode(child)
     }
   }
 
   /**
-   * 测量节点的期望尺寸
+   * 测量节点的期望尺寸（递归）
+   * 如果节点没有指定尺寸，则根据子节点内容自动计算
    */
   private measureNode(node: CanvasNode, availableWidth: number, availableHeight: number): { width: number; height: number } {
     const style = node.getComputedStyle()
@@ -65,25 +81,59 @@ export class LayoutEngine {
     let width = style.width ?? 0
     let height = style.height ?? 0
 
-    // 文本节点自动计算尺寸
+    // 文本节点 / 按钮节点：根据文本内容计算尺寸
     if (node instanceof TextNode || node instanceof ButtonNode) {
       const text = node instanceof TextNode ? node.text : (node as ButtonNode).text
       const fontSize = style.fontSize || 14
-      // 粗略估算文本宽度（每个字符约 0.6 * fontSize）
       const textWidth = this.estimateTextWidth(text, fontSize, style.fontWeight)
       if (!style.width) width = textWidth + pl + pr
       if (!style.height) height = fontSize * 1.5 + pt + pb
+      return { width, height }
     }
 
-    // 如果没有指定尺寸，使用可用空间
-    if (!style.width && !(node instanceof TextNode) && !(node instanceof ButtonNode)) {
+    // 容器节点：根据子节点计算自适应尺寸
+    if (style.width === undefined) {
       width = availableWidth
     }
-    if (!style.height && !(node instanceof TextNode) && !(node instanceof ButtonNode)) {
-      height = 40 // 默认高度
+
+    // 如果没有指定高度，需要根据子节点内容计算
+    if (style.height === undefined) {
+      if (node.children.length === 0) {
+        height = 40 // 无子节点的空容器默认高度
+      } else {
+        height = this.measureContentHeight(node, width)
+      }
     }
 
     return { width, height }
+  }
+
+  /**
+   * 根据子节点内容计算容器的自适应高度
+   */
+  private measureContentHeight(node: CanvasNode, containerWidth: number): number {
+    const style = node.getComputedStyle()
+    const [pt, pr, pb, pl] = parseSpacing(style.padding)
+    const direction = style.flexDirection || 'column'
+    const gap = style.gap || 0
+
+    const contentWidth = containerWidth - pl - pr
+
+    // 递归测量所有子节点
+    const childSizes = node.children.map(child =>
+      this.measureNode(child, contentWidth, Infinity)
+    )
+
+    if (direction === 'column') {
+      // 纵向排列：高度 = 所有子节点高度之和 + gap + padding
+      const totalChildHeight = childSizes.reduce((sum, s) => sum + s.height, 0)
+      const totalGap = gap * (node.children.length - 1)
+      return totalChildHeight + totalGap + pt + pb
+    } else {
+      // 横向排列：高度 = 最高子节点的高度 + padding
+      const maxChildHeight = childSizes.reduce((max, s) => Math.max(max, s.height), 0)
+      return maxChildHeight + pt + pb
+    }
   }
 
   /**

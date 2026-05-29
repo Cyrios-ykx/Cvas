@@ -10,6 +10,10 @@ export class EventManager {
   private hoveredNode: CanvasNode | null = null
   private onNeedRender: (() => void) | null = null
 
+  // 滚动相关
+  private scrollY: number = 0
+  private onScroll: ((deltaY: number) => void) | null = null
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
     this.bindEvents()
@@ -30,6 +34,20 @@ export class EventManager {
   }
 
   /**
+   * 设置滚动回调
+   */
+  setScrollCallback(cb: (deltaY: number) => void): void {
+    this.onScroll = cb
+  }
+
+  /**
+   * 更新当前滚动偏移（用于命中测试坐标修正）
+   */
+  setScrollY(scrollY: number): void {
+    this.scrollY = scrollY
+  }
+
+  /**
    * 绑定 Canvas DOM 事件
    */
   private bindEvents(): void {
@@ -38,6 +56,17 @@ export class EventManager {
     this.canvas.addEventListener('mouseup', (e) => this.handleEvent('mouseup', e))
     this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e))
     this.canvas.addEventListener('mouseleave', () => this.handleMouseLeave())
+
+    // 滚轮事件
+    this.canvas.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false })
+  }
+
+  /**
+   * 处理滚轮事件
+   */
+  private handleWheel(e: WheelEvent): void {
+    e.preventDefault()
+    this.onScroll?.(e.deltaY)
   }
 
   /**
@@ -46,10 +75,11 @@ export class EventManager {
   private handleEvent(type: string, e: MouseEvent): void {
     if (!this.root) return
     const { x, y } = this.getCanvasPosition(e)
-    const target = this.hitTest(this.root, x, y)
+    // 命中测试时需要加上滚动偏移，因为节点的 layout 坐标是绝对坐标
+    const target = this.hitTest(this.root, x, y + this.scrollY)
 
     if (target) {
-      const event = this.createEvent(type, target, x, y)
+      const event = this.createEvent(type, target, x, y + this.scrollY)
       this.dispatchEvent(target, event)
     }
   }
@@ -60,21 +90,22 @@ export class EventManager {
   private handleMouseMove(e: MouseEvent): void {
     if (!this.root) return
     const { x, y } = this.getCanvasPosition(e)
-    const target = this.hitTest(this.root, x, y)
+    // 命中测试时加上滚动偏移
+    const target = this.hitTest(this.root, x, y + this.scrollY)
 
     // 更新 hover 状态
     if (target !== this.hoveredNode) {
       // 离开旧节点
       if (this.hoveredNode) {
         this.hoveredNode.isHovered = false
-        const leaveEvent = this.createEvent('mouseleave', this.hoveredNode, x, y)
+        const leaveEvent = this.createEvent('mouseleave', this.hoveredNode, x, y + this.scrollY)
         this.hoveredNode.emit('mouseleave', leaveEvent)
       }
 
       // 进入新节点
       if (target) {
         target.isHovered = true
-        const enterEvent = this.createEvent('mouseenter', target, x, y)
+        const enterEvent = this.createEvent('mouseenter', target, x, y + this.scrollY)
         target.emit('mouseenter', enterEvent)
       }
 

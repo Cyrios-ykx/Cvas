@@ -255,6 +255,233 @@ for (let i = 0; i < 3; i++) {
 flexColContainer.append(flexCol1, flexCol2, flexCol3)
 layoutCard.append(layoutTitle, flexRow, flexColContainer)
 
+// --- Todo List 卡片 ---
+const todoCard = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: [20, 24],
+  background: '#ffffff',
+  borderRadius: 12,
+  gap: 12,
+  shadowColor: 'rgba(0,0,0,0.08)',
+  shadowBlur: 12,
+  shadowOffsetY: 4
+})
+
+const todoTitle = new TextNode('📝 Todo List', {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: '#333',
+  textAlign: 'left'
+})
+
+// Todo 数据
+const todos = [
+{ text: '搭建 Vuvas 核心引擎', done: true },
+  { text: '实现 Flexbox 布局', done: true },
+  { text: '实现事件系统', done: true },
+  { text: '添加响应式系统', done: false },
+  { text: '实现模板编译器', done: false }
+]
+
+// 创建 Todo 项
+const todoItems: { row: CanvasNode; label: TextNode; done: boolean }[] = []
+
+for (const todo of todos) {
+  const row = new CanvasNode({
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    height: 36,
+    padding: [6, 12],
+    background: todo.done ? '#f0fdf4' : '#fafafa',
+    borderRadius: 6,
+    cursor: 'pointer'
+  })
+  row.hoverStyle = { background: todo.done ? '#dcfce7' : '#f0f0f0' }
+
+  const checkbox = new TextNode(todo.done ? '✅' : '⬜', {
+    fontSize: 16,
+    textAlign: 'left'
+  })
+
+  const label = new TextNode(todo.text, {
+    fontSize: 14,
+    color: todo.done ? '#16a34a' : '#333333',
+    textAlign: 'left'
+  })
+
+  row.append(checkbox, label)
+  todoItems.push({ row, label, done: todo.done })
+
+  // 点击切换完成状态
+  row.on('click', () => {
+    const item = todoItems.find(t => t.row === row)!
+    item.done = !item.done
+    // 更新显示
+    checkbox.text = item.done ? '✅' : '⬜'
+    item.label.style = {
+      ...item.label.style,
+      color: item.done ? '#16a34a' : '#333333'
+    }
+    row.style = {
+      ...row.style,
+      background: item.done ? '#f0fdf4' : '#fafafa'
+    }
+    row.hoverStyle = { background: item.done ? '#dcfce7' : '#f0f0f0' }
+    app.scheduleRender()
+  })
+
+  todoCard.append(row)
+}
+
+// 在最前面插入标题
+todoCard.children.unshift(todoTitle)
+todoTitle.parent = todoCard
+
+// --- 动画进度条卡片 ---
+const progressCard = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: [20, 24],
+  background: '#ffffff',
+  borderRadius: 12,
+  gap: 14,
+  shadowColor: 'rgba(0,0,0,0.08)',
+  shadowBlur: 12,
+  shadowOffsetY: 4
+})
+
+const progressTitle = new TextNode('🚀 动画进度条', {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: '#333',
+  textAlign: 'left'
+})
+
+// 进度条背景
+const progressBg = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'row',
+  height: 24,
+  background: '#e5e7eb',
+  borderRadius: 12
+})
+
+// 进度条填充
+const progressFill = new CanvasNode({
+  width: 0,
+  height: 24,
+  background: '#6366f1',
+  borderRadius: 12
+})
+
+progressBg.append(progressFill)
+
+// 进度文本
+const progressText = new TextNode('0%', {
+  fontSize: 14,
+  color: '#6366f1',
+  fontWeight: 'bold',
+  textAlign: 'left'
+})
+
+// 控制按钮行
+const progressBtnRow = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'row',
+  gap: 12,
+  height: 36,
+  alignItems: 'center'
+})
+
+const btnStart = new ButtonNode('开始', {
+  padding: [6, 16],
+  background: '#6366f1',
+  color: '#fff',
+  borderRadius: 6,
+  fontSize: 13,
+  fontWeight: 'bold',
+  cursor: 'pointer'
+})
+btnStart.hoverStyle = { background: '#4f46e5' }
+
+const btnPause = new ButtonNode('暂停', {
+  padding: [6, 16],
+  background: '#f59e0b',
+  color: '#fff',
+  borderRadius: 6,
+  fontSize: 13,
+  fontWeight: 'bold',
+  cursor: 'pointer'
+})
+btnPause.hoverStyle = { background: '#d97706' }
+
+const btnResetProgress = new ButtonNode('重置', {
+  padding: [6, 16],
+  background: '#ef4444',
+  color: '#fff',
+  borderRadius: 6,
+  fontSize: 13,
+  fontWeight: 'bold',
+  cursor: 'pointer'
+})
+btnResetProgress.hoverStyle = { background: '#dc2626' }
+
+progressBtnRow.append(btnStart, btnPause, btnResetProgress)
+progressCard.append(progressTitle, progressBg, progressText, progressBtnRow)
+
+// 进度条动画逻辑
+let progress = 0
+let animating = false
+let animationId: number | null = null
+
+function animateProgress() {
+  if (!animating) return
+  progress += 0.5
+  if (progress >= 100) {
+    progress = 100
+    animating = false
+  }
+  // 更新进度条宽度（基于父容器宽度的百分比）
+  const maxWidth = progressBg.layout.width || 300
+  progressFill.style.width = (progress / 100) * maxWidth
+  progressText.text = `${Math.round(progress)}%`
+  app.scheduleRender()
+
+  if (animating) {
+    animationId = requestAnimationFrame(animateProgress)
+  }
+}
+
+btnStart.on('click', () => {
+  if (!animating && progress < 100) {
+    animating = true
+    animateProgress()
+  }
+})
+
+btnPause.on('click', () => {
+  animating = false
+  if (animationId) {
+    cancelAnimationFrame(animationId)
+    animationId = null
+  }
+})
+
+btnResetProgress.on('click', () => {
+  animating = false
+  if (animationId) {
+    cancelAnimationFrame(animationId)
+    animationId = null
+  }
+  progress = 0
+  progressFill.style.width = 0
+  progressText.text = '0%'
+  app.scheduleRender()
+})
+
 // --- 交互提示卡片 ---
 const infoCard = new CanvasNode({
   display: 'flex',
@@ -267,7 +494,7 @@ const infoCard = new CanvasNode({
   height: 56
 })
 
-const infoText = new TextNode('💡 试试点击按钮、悬停在彩色方块上查看交互效果！', {
+const infoText = new TextNode('💡 试试点击按钮、Todo项、悬停在彩色方块上查看交互效果！', {
   fontSize: 14,
   color: '#2e7d32',
   textAlign: 'left'
@@ -276,7 +503,7 @@ const infoText = new TextNode('💡 试试点击按钮、悬停在彩色方块�
 infoCard.append(infoText)
 
 // --- 组装并挂载 ---
-root.append(header, counterCard, layoutCard, infoCard)
+root.append(header, counterCard, layoutCard, todoCard, progressCard, infoCard)
 app.mount(root)
 
 console.log('✅ Vuvas Demo 已启动!')

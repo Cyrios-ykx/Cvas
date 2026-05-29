@@ -10,6 +10,9 @@ export class Renderer {
   private height: number
   private dpr: number
 
+  // 滚动偏移量
+  scrollY: number = 0
+
   constructor(canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('无法获取 Canvas 2D 上下文')
@@ -29,11 +32,25 @@ export class Renderer {
   }
 
   /**
+   * 获取视口尺寸
+   */
+  getViewportSize(): { width: number; height: number } {
+    return { width: this.width, height: this.height }
+  }
+
+  /**
    * 清空画布并重新渲染整棵树
    */
   render(root: CanvasNode): void {
     this.ctx.clearRect(0, 0, this.width, this.height)
+
+    // 应用滚动偏移
+    this.ctx.save()
+    this.ctx.translate(0, -this.scrollY)
+
     this.renderNode(root)
+
+    this.ctx.restore()
   }
 
   /**
@@ -42,6 +59,13 @@ export class Renderer {
   private renderNode(node: CanvasNode): void {
     const style = node.getComputedStyle()
     const { x, y, width, height } = node.layout
+
+    // 视口裁剪优化：跳过完全不在可视区域内的节点
+    const viewTop = this.scrollY
+    const viewBottom = this.scrollY + this.height
+    if (y + height < viewTop || y > viewBottom) {
+      return
+    }
 
     // 保存上下文状态
     this.ctx.save()
