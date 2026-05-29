@@ -1,4 +1,5 @@
 import { CanvasNode, TextNode, ButtonNode, ImageNode, parseSpacing, type NodeStyle } from './node'
+import { drawText as drawTextFn } from './renderer-text'
 
 /**
  * Canvas 渲染器
@@ -91,7 +92,9 @@ export class Renderer {
     const shadowBlur = style.shadowBlur || 0
     const shadowOffsetX = style.shadowOffsetX || 0
     const shadowOffsetY = style.shadowOffsetY || 0
-    const expand = shadowBlur + Math.max(Math.abs(shadowOffsetX), Math.abs(shadowOffsetY))
+    const shadowExpand = shadowBlur + Math.max(Math.abs(shadowOffsetX), Math.abs(shadowOffsetY))
+    // 额外扩展 1px 避免 clip() 边缘的抗锯齿伪影
+    const expand = shadowExpand + 1
     this.markDirty(x - expand, y - expand, width + expand * 2, height + expand * 2)
     // 更新节点版本号
     const currentVersion = this.nodeVersions.get(node) || 0
@@ -441,142 +444,10 @@ export class Renderer {
   }
 
   /**
-   * 绘制文本（支持换行）
+   * 绘制文本（委托到 renderer-text 模块）
    */
   private drawText(text: string, x: number, y: number, w: number, h: number, style: NodeStyle): void {
-    const fontSize = style.fontSize || 14
-    const fontWeight = style.fontWeight || 'normal'
-    const fontFamily = style.fontFamily || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    const color = style.color || '#333333'
-    const textAlign = style.textAlign || 'center'
-    const lineHeight = style.lineHeight || fontSize * 1.4
-    const maxLines = style.maxLines || 0
-    const whiteSpace = style.whiteSpace || 'normal'
-    const textOverflow = style.textOverflow || 'clip'
-
-    // 透明度
-    if (style.opacity !== undefined) {
-      this.ctx.globalAlpha = style.opacity
-    }
-
-    this.ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`
-    this.ctx.fillStyle = color
-    this.ctx.textBaseline = 'top'
-
-    const [pt, pr, pb, pl] = parseSpacing(style.padding)
-    const maxWidth = w - pl - pr
-
-    // 计算文本 X 坐标
-    let textX: number
-    switch (textAlign) {
-      case 'left':
-        this.ctx.textAlign = 'left'
-        textX = x + pl
-        break
-      case 'right':
-        this.ctx.textAlign = 'right'
-        textX = x + w - pr
-        break
-      default:
-        this.ctx.textAlign = 'center'
-        textX = x + w / 2
-        break
-    }
-
-    // 不换行模式：单行绘制
-    if (whiteSpace === 'nowrap') {
-      this.ctx.textBaseline = 'middle'
-      const textY = y + h / 2
-      let displayText = text
-      // 文本溢出处理
-      if (this.ctx.measureText(text).width > maxWidth && textOverflow === 'ellipsis') {
-        displayText = this.truncateText(text, maxWidth)
-      }
-      this.ctx.fillText(displayText, textX, textY, maxWidth)
-      return
-    }
-
-    // 换行模式：将文本拆分为多行
-    const lines = this.wrapText(text, maxWidth)
-
-    // 限制最大行数
-    let displayLines = lines
-    if (maxLines > 0 && lines.length > maxLines) {
-      displayLines = lines.slice(0, maxLines)
-      // 最后一行添加省略号
-      if (textOverflow === 'ellipsis') {
-        const lastLine = displayLines[displayLines.length - 1]
-        displayLines[displayLines.length - 1] = this.truncateText(lastLine + '...', maxWidth)
-      }
-    }
-
-    // 计算起始 Y（垂直居中）
-    const totalTextHeight = displayLines.length * lineHeight
-    const startY = y + (h - totalTextHeight) / 2
-
-    // 逐行绘制
-    for (let i = 0; i < displayLines.length; i++) {
-      const lineY = startY + i * lineHeight + lineHeight / 2
-      this.ctx.textBaseline = 'middle'
-      this.ctx.fillText(displayLines[i], textX, lineY, maxWidth)
-    }
-
-    // 恢复透明度
-    if (style.opacity !== undefined) {
-      this.ctx.globalAlpha = 1
-    }
-  }
-
-  /**
-   * 文本换行：将文本按宽度拆分为多行
-   */
-  private wrapText(text: string, maxWidth: number): string[] {
-    const lines: string[] = []
-    // 先按换行符分割
-    const paragraphs = text.split('\n')
-
-    for (const paragraph of paragraphs) {
-      if (this.ctx.measureText(paragraph).width <= maxWidth) {
-        lines.push(paragraph)
-        continue
-      }
-
-      // 逐字符计算换行
-      let currentLine = ''
-      for (const char of paragraph) {
-        const testLine = currentLine + char
-        if (this.ctx.measureText(testLine).width > maxWidth && currentLine) {
-          lines.push(currentLine)
-          currentLine = char
-        } else {
-          currentLine = testLine
-        }
-      }
-      if (currentLine) {
-        lines.push(currentLine)
-      }
-    }
-
-    return lines
-  }
-
-  /**
-   * 截断文本并添加省略号
-   */
-  private truncateText(text: string, maxWidth: number): string {
-    const ellipsis = '...'
-    const ellipsisWidth = this.ctx.measureText(ellipsis).width
-
-    if (this.ctx.measureText(text).width <= maxWidth) return text
-
-    let truncated = ''
-    for (const char of text) {
-      if (this.ctx.measureText(truncated + char + ellipsis).width > maxWidth) {
-        return truncated + ellipsis
-      }
-      truncated += char
-    }
-    return truncated + ellipsis
+    drawTextFn(this.ctx, text, x, y, w, h, style)
   }
 
   /**
