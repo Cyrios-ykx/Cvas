@@ -120,7 +120,7 @@ const container = new View({
   style: { display: 'flex', flexDirection: 'column', padding: 20, gap: 10 }
 })
 
-const title = new Text('Hello html-in-canvas!', {
+const title = new Text('Hello Vuvas!', {
   style: { fontSize: 24, color: '#333', fontWeight: 'bold' }
 })
 

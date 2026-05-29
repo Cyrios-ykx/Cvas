@@ -14,7 +14,7 @@
   "icon": "icons/vuvas-icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Cyrios-ykx/html-in-canvas"
+    "url": "https://github.com/Cyrios-ykx/Vuvas"
   },
   "contributes": {
     "languages": [
