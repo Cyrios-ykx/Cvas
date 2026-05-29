@@ -73,6 +73,71 @@ export interface LayoutBox {
 }
 
 /**
+ * 影响布局计算的属性集合
+ * 修改这些属性需要重新计算布局
+ */
+export const LAYOUT_AFFECTING_PROPS: Set<string> = new Set([
+  'width', 'height', 'minWidth', 'minHeight',
+  'padding', 'margin',
+  'display', 'flexDirection', 'justifyContent', 'alignItems',
+  'flexWrap', 'gap', 'flexGrow', 'flexShrink',
+  'widthPercent', 'heightPercent',
+  'fontSize', 'fontWeight', 'fontFamily', // 文本尺寸影响布局
+  'lineHeight', 'maxLines', 'whiteSpace', 'textOverflow'
+])
+
+/**
+ * 仅影响视觉渲染的属性集合
+ * 修改这些属性只需要重绘，不需要重新布局
+ */
+export const VISUAL_ONLY_PROPS: Set<string> = new Set([
+  'background', 'color', 'borderRadius', 'border',
+  'borderColor', 'borderWidth', 'borderStyle',
+  'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY',
+  'opacity', 'objectFit', 'cursor', 'textAlign'
+])
+
+/**
+ * 样式变更类型
+ */
+export const enum StyleChangeType {
+  /** 无变更 */
+  NONE = 0,
+  /** 仅视觉变更（不需要重新布局） */
+  VISUAL = 1,
+  /** 布局变更（需要重新计算布局） */
+  LAYOUT = 2
+}
+
+/**
+ * 检测样式变更类型
+ * 对比新旧样式，判断是否需要重新布局
+ */
+export function detectStyleChangeType(
+  oldStyle: NodeStyle,
+  newProps: Partial<NodeStyle>
+): StyleChangeType {
+  let changeType = StyleChangeType.NONE
+
+  for (const key of Object.keys(newProps)) {
+    const oldVal = (oldStyle as any)[key]
+    const newVal = (newProps as any)[key]
+
+    // 值没变，跳过
+    if (oldVal === newVal) continue
+
+    // 值变了，判断属性类型
+    if (LAYOUT_AFFECTING_PROPS.has(key)) {
+      return StyleChangeType.LAYOUT // 有布局属性变了，直接返回最高级别
+    }
+
+    changeType = StyleChangeType.VISUAL
+  }
+
+  return changeType
+}
+
+/**
  * 解析 padding/margin 为四个方向的值
  */
 export function parseSpacing(value?: number | [number, number] | [number, number, number, number]): [number, number, number, number] {
@@ -119,9 +184,59 @@ export class CanvasNode {
   isHovered: boolean = false
   // hover 时的样式覆盖
   hoverStyle?: Partial<NodeStyle>
+  // 布局是否需要重新计算（脏标记）
+  _layoutDirty: boolean = true
+  // 视觉是否需要重绘（脏标记）
+  _visualDirty: boolean = true
 
   constructor(style?: NodeStyle) {
     if (style) this.style = style
+  }
+
+  /**
+   * 智能样式更新
+   * 自动检测变更类型，标记最小化的脏区域
+   * @returns 变更类型（NONE / VISUAL / LAYOUT）
+   */
+  setStyle(newProps: Partial<NodeStyle>): StyleChangeType {
+    const changeType = detectStyleChangeType(this.style, newProps)
+
+    if (changeType === StyleChangeType.NONE) return changeType
+
+    // 应用样式变更
+    Object.assign(this.style, newProps)
+
+    if (changeType === StyleChangeType.LAYOUT) {
+      this._layoutDirty = true
+      this._visualDirty = true
+      // 布局变更需要向上冒泡标记父节点
+      let p = this.parent
+      while (p) {
+        p._layoutDirty = true
+        p = p.parent
+      }
+    } else {
+      this._visualDirty = true
+    }
+
+    return changeType
+  }
+
+  /**
+   * 批量更新样式（直接赋值，不做检测）
+   * 用于已知只有视觉属性变更的场景，跳过检测开销
+   */
+  setVisualStyle(newProps: Partial<NodeStyle>): void {
+    Object.assign(this.style, newProps)
+    this._visualDirty = true
+  }
+
+  /**
+   * 重置脏标记
+   */
+  clearDirty(): void {
+    this._layoutDirty = false
+    this._visualDirty = false
   }
 
   /**

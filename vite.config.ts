@@ -3,6 +3,8 @@ import { resolve } from 'path'
 import { vuvasPlugin } from './src/compiler/vite-plugin'
 
 export default defineConfig({
+  // GitHub Pages 部署时使用 /Vuvas/ 路径，本地开发使用 /
+  base: process.env.BASE_URL || '/',
   plugins: [vuvasPlugin()],
   resolve: {
     alias: {
@@ -14,7 +16,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        sfc: resolve(__dirname, 'sfc.html')
+        sfc: resolve(__dirname, 'sfc.html'),
+        benchmark: resolve(__dirname, 'benchmarks/index.html')
       }
     }
   },

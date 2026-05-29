@@ -1,0 +1,81 @@
+{
+  "title": "Vuvas 性能基准测试报告",
+  "timestamp": "2026-05-29T07:35:48.867Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+  "results": [
+    {
+      "name": "创建 1000 个节点",
+      "description": "从零创建 1000 个文本节点并完成首次渲染（含布局计算）",
+      "vuvasTime": 1.03,
+      "domTime": 8.15,
+      "unit": "ms",
+      "ratio": 7.89
+    },
+    {
+      "name": "更新 1000 个节点属性",
+      "description": "批量更新 1000 个节点的背景色（优化：跳过布局计算 + 脏区域重绘）",
+      "vuvasTime": 1.23,
+      "domTime": 0.43,
+      "unit": "ms",
+      "ratio": 0.35
+    },
+    {
+      "name": "列表重排序 (1000 项)",
+      "description": "随机打乱 1000 个节点的顺序，测试 diff/patch 效率",
+      "vuvasTime": 2.05,
+      "domTime": 6.15,
+      "unit": "ms",
+      "ratio": 3
+    },
+    {
+      "name": "深层嵌套树渲染",
+      "description": "深度 7，每层 3 个子节点（共 2187 个叶子节点）",
+      "vuvasTime": 6.93,
+      "domTime": 20.03,
+      "unit": "ms",
+      "ratio": 2.89
+    },
+    {
+      "name": "动画帧率 (100 节点)",
+      "description": "持续 2 秒，每帧更新 100 个节点的尺寸",
+      "vuvasFps": 54,
+      "domFps": 60.5,
+      "vuvasDropped": 3,
+      "domDropped": 0,
+      "unit": "fps",
+      "ratio": 0.89
+    },
+    {
+      "name": "内存占用对比",
+      "description": "不同节点数量下的 JS 堆内存占用（需要 Chrome --enable-precise-memory-info）",
+      "points": [
+        {
+          "nodeCount": 100,
+          "vuvasMemory": 0,
+          "domMemory": 0
+        },
+        {
+          "nodeCount": 500,
+          "vuvasMemory": 0,
+          "domMemory": 0
+        },
+        {
+          "nodeCount": 1000,
+          "vuvasMemory": 0,
+          "domMemory": 0
+        },
+        {
+          "nodeCount": 2000,
+          "vuvasMemory": 0,
+          "domMemory": 0
+        },
+        {
+          "nodeCount": 5000,
+          "vuvasMemory": 0,
+          "domMemory": 5593
+        }
+      ],
+      "unit": "KB"
+    }
+  ]
+}

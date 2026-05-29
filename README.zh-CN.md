@@ -17,9 +17,14 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Cyrios-ykx/Vuvas/actions/workflows/ci.yml"><img src="https://github.com/Cyrios-ykx/Vuvas/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/language-TypeScript-blue.svg" alt="TypeScript" />
   <img src="https://img.shields.io/badge/status-WIP-orange.svg" alt="Work in Progress" />
+</p>
+
+<p align="center">
+  <a href="https://cyrios-ykx.github.io/Vuvas/">📺 在线 Demo</a>
 </p>
 
 ---
@@ -56,6 +61,8 @@
 | 表单密集型应用 | ⚠️ 能力有限 | ✅ 最佳选择 |
 
 **一句话总结**：Vue → 「内容型」应用（信息展示、表单、标准 Web）。Vuvas → 「画布型」应用（自由定位、像素控制、图形密集、导出需求）。
+
+> Vuvas 的最大价值不是"替代 Vue"，而是让需要 Canvas 的场景也能享受 Vue 的开发体验，降低 Canvas 应用的开发门槛。
 
 ## 🚀 快速开始
 
@@ -191,4 +198,4 @@ vuvas/
 
 ## 📄 许可证
 
-[MIT](./LICENSE) © 2025-present Cyrios-ykx
+[MIT](./LICENSE) © 2026-present Cyrios-ykx

@@ -1,0 +1,31 @@
+# 源码（已构建为 dist）
+src/
+demo/
+extensions/
+public/
+
+# 文档 & 配置
+ARCHITECTURE.md
+CONTRIBUTING.md
+CONTRIBUTING.zh-CN.md
+README.zh-CN.md
+TASKS.md
+PUBLISH.md
+index.md
+tsconfig.json
+tsconfig.build.json
+vite.config.ts
+vite.config.lib.ts
+env.d.ts
+index.html
+sfc.html
+
+# 排除 dist 中的图片
+dist/**/*.png
+dist/**/*.jpg
+dist/**/*.svg
+
+# 开发工具
+.gitignore
+.github/
+node_modules/

@@ -17,9 +17,14 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Cyrios-ykx/Vuvas/actions/workflows/ci.yml"><img src="https://github.com/Cyrios-ykx/Vuvas/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/language-TypeScript-blue.svg" alt="TypeScript" />
   <img src="https://img.shields.io/badge/status-WIP-orange.svg" alt="Work in Progress" />
+</p>
+
+<p align="center">
+  <a href="https://cyrios-ykx.github.io/Vuvas/">📺 Online Demo</a>
 </p>
 
 ---
@@ -56,6 +61,8 @@
 | Form-heavy applications | ⚠️ Limited | ✅ Best fit |
 
 **TL;DR**: Vue → "content" apps (info display, forms, standard web). Vuvas → "canvas" apps (free positioning, pixel control, graphics-intensive, export needs).
+
+> Vuvas's greatest value is not to "replace Vue", but to bring Vue's development experience to Canvas scenarios, lowering the barrier for building Canvas applications.
 
 ## 🚀 Quick Start
 
@@ -191,4 +198,4 @@ Contributions of any kind are welcome! Please read [CONTRIBUTING.md](./CONTRIBUT
 
 ## 📄 License
 
-[MIT](./LICENSE) © 2025-present Cyrios-ykx
+[MIT](./LICENSE) © 2026-present Cyrios-ykx

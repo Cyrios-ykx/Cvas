@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vuvas 性能基准测试 - Vuvas vs Vue + DOM</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f1419;
+      color: #e7e9ea;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #42b883, #35495e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      text-align: center;
+      color: #71767b;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    button {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .btn-primary {
+      background: #42b883;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #3aa876; }
+    .btn-primary:disabled {
+      background: #2d3748;
+      color: #71767b;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-secondary {
+      background: #1d2833;
+      color: #e7e9ea;
+      border: 1px solid #38444d;
+    }
+    .btn-secondary:hover { background: #253341; }
+    .results {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .benchmark-card {
+      background: #1d2833;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid #38444d;
+    }
+    .benchmark-card h3 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #e7e9ea;
+    }
+    .benchmark-card .description {
+      font-size: 13px;
+      color: #71767b;
+      margin-bottom: 16px;
+    }
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .bar-label {
+      width: 120px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .bar-track {
+      flex: 1;
+      height: 28px;
+      background: #0f1419;
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.6s ease;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      min-width: fit-content;
+    }
+    .bar-fill.vuvas { background: linear-gradient(90deg, #42b883, #35a070); }
+    .bar-fill.vue-dom { background: linear-gradient(90deg, #f56c6c, #e04040); }
+    .bar-value {
+      font-size: 13px;
+      width: 80px;
+      text-align: right;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .winner { color: #42b883; font-weight: 600; }
+    .loser { color: #f56c6c; }
+    .status {
+      text-align: center;
+      padding: 40px;
+      color: #71767b;
+      font-size: 14px;
+    }
+    .status .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #38444d;
+      border-top-color: #42b883;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .summary {
+      background: #1d2833;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 24px;
+      border: 1px solid #38444d;
+      text-align: center;
+    }
+    .summary h2 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    .summary .score {
+      font-size: 48px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #42b883, #35495e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .summary .detail {
+      color: #71767b;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    /* 隐藏的 Canvas 和 DOM 容器 */
+    #bench-canvas {
+      position: fixed;
+      top: -9999px;
+      left: -9999px;
+    }
+    #bench-dom {
+      position: fixed;
+      top: -9999px;
+      left: -9999px;
+    }
+  </style>
+</head>
+<body>
+  <h1>⚡ Vuvas 性能基准测试</h1>
+  <p class="subtitle">Vuvas (Canvas) vs Vue-like DOM 渲染性能对比</p>
+
+  <div class="controls">
+    <button class="btn-primary" id="btn-run-all">运行全部测试</button>
+    <button class="btn-secondary" id="btn-export">导出报告</button>
+  </div>
+
+  <div class="results" id="results">
+    <div class="status" id="status">点击「运行全部测试」开始性能对比</div>
+  </div>
+
+  <canvas id="bench-canvas" width="800" height="600"></canvas>
+  <div id="bench-dom"></div>
+
+  <script type="module" src="./bench-main.ts"></script>
+</body>
+</html>

@@ -7,6 +7,10 @@ import { CanvasNode, TextNode, ButtonNode, parseSpacing, type LayoutBox } from '
  * 核心流程：
  * 1. 自底向上测量（measure）：计算每个节点的期望尺寸
  * 2. 自顶向下布局（layout）：根据父容器约束分配最终位置
+ *
+ * 优化策略：
+ * - 增量布局：仅重新计算 _layoutDirty 标记为 true 的子树
+ * - 跳过纯视觉变更：颜色/透明度等变更不触发布局计算
  */
 export class LayoutEngine {
   /**
@@ -32,6 +36,34 @@ export class LayoutEngine {
       height: rootHeight
     }
     this.layoutNode(root)
+  }
+
+  /**
+   * 增量布局：仅重新计算标记为 _layoutDirty 的子树
+   * 如果没有任何节点需要重新布局，直接跳过
+   * @returns 是否执行了布局计算
+   */
+  computeLayoutIfNeeded(root: CanvasNode, containerWidth: number, containerHeight: number): boolean {
+    if (!root._layoutDirty) {
+      return false // 无需重新布局
+    }
+    // 有脏节点，执行完整布局
+    this.computeLayout(root, containerWidth, containerHeight)
+    // 清除所有脏标记
+    this.clearDirtyFlags(root)
+    return true
+  }
+
+  /**
+   * 递归清除所有节点的脏标记
+   */
+  private clearDirtyFlags(node: CanvasNode): void {
+    node._layoutDirty = false
+    for (const child of node.children) {
+      if (child._layoutDirty) {
+        this.clearDirtyFlags(child)
+      }
+    }
   }
 
   /**

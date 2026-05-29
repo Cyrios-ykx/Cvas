@@ -85,6 +85,38 @@ export class Renderer {
   }
 
   /**
+   * 检查是否需要全量重绘
+   */
+  needsFullRender(): boolean {
+    return this.forceFullRender
+  }
+
+  /**
+   * 智能重绘：遍历节点树，仅将 _visualDirty 的节点标记为脏区域
+   * 适用于只有视觉属性变更（颜色、透明度等）的场景
+   * 比 invalidateAll() 全量重绘更高效
+   */
+  renderVisualChanges(root: CanvasNode): void {
+    this.collectDirtyNodes(root)
+    if (this.dirtyRects.length > 0) {
+      this.render(root)
+    }
+  }
+
+  /**
+   * 递归收集视觉脏节点的区域
+   */
+  private collectDirtyNodes(node: CanvasNode): void {
+    if (node._visualDirty) {
+      this.markNodeDirty(node)
+      node._visualDirty = false
+    }
+    for (const child of node.children) {
+      this.collectDirtyNodes(child)
+    }
+  }
+
+  /**
    * 清空画布并重新渲染整棵树
    * 支持脏区域优化：如果有脏区域，仅重绘脏区域
    */

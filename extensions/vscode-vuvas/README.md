@@ -82,4 +82,4 @@ view {
 
 ## License
 
-MIT © 2025-present Cyrios-ykx
+MIT © 2026-present Cyrios-ykx

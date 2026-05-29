@@ -5,6 +5,7 @@ import { EventManager } from './event'
 
 export { CanvasNode, TextNode, ButtonNode, ImageNode } from './node'
 export type { NodeStyle, CanvasEvent, EventHandler } from './node'
+export { LAYOUT_AFFECTING_PROPS, VISUAL_ONLY_PROPS, detectStyleChangeType, StyleChangeType } from './node'
 export { LayoutEngine } from './layout'
 export { Renderer } from './renderer'
 export { EventManager } from './event'
@@ -68,11 +69,14 @@ export class App {
     // 同步滚动偏移到渲染器和事件系统
     this.renderer.scrollY = this.scrollY
     this.events.setScrollY(this.scrollY)
+    // 滚动需要全量重绘（视口偏移变了）
+    this.renderer.invalidateAll()
     this.scheduleRender()
   }
 
   /**
    * 执行一次完整的布局 + 渲染
+   * 优化：使用增量布局，仅在布局属性变更时重新计算
    */
   render(): void {
     if (!this.root) return
@@ -80,22 +84,31 @@ export class App {
     // 获取视口尺寸
     const { width, height } = this.renderer.getViewportSize()
 
-    // 计算布局（使用视口宽度，但高度不限制，让内容自然撑开）
-    this.layout.computeLayout(this.root, width, height)
+    // 增量布局：仅在有布局变更时重新计算
+    const layoutChanged = this.layout.computeLayoutIfNeeded(this.root, width, height)
 
-    // 计算最大滚动范围（内容高度 - 视口高度）
-    const contentHeight = this.root.layout.height
-    this.maxScrollY = Math.max(0, contentHeight - height)
+    if (layoutChanged) {
+      // 布局变了，更新滚动范围
+      const contentHeight = this.root.layout.height
+      this.maxScrollY = Math.max(0, contentHeight - height)
 
-    // 确保当前滚动位置不超出范围
-    if (this.scrollY > this.maxScrollY) {
-      this.scrollY = this.maxScrollY
-      this.renderer.scrollY = this.scrollY
-      this.events.setScrollY(this.scrollY)
+      // 确保当前滚动位置不超出范围
+      if (this.scrollY > this.maxScrollY) {
+        this.scrollY = this.maxScrollY
+        this.renderer.scrollY = this.scrollY
+        this.events.setScrollY(this.scrollY)
+      }
+
+      // 布局变更需要全量重绘
+      this.renderer.invalidateAll()
+      this.renderer.render(this.root)
+    } else if (this.renderer.needsFullRender()) {
+      // 布局没变但有全量重绘标记（如滚动）
+      this.renderer.render(this.root)
+    } else {
+      // 布局没变，尝试仅重绘视觉变更的节点
+      this.renderer.renderVisualChanges(this.root)
     }
-
-    // 渲染到 Canvas
-    this.renderer.render(this.root)
   }
 }
 
