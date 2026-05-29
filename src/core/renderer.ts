@@ -211,10 +211,14 @@ export class Renderer {
 
   /**
    * 递归渲染节点
+   * 优化：减少 ctx.save()/restore() 调用，只在需要透明度或阴影时才保存状态
    */
   private renderNode(node: CanvasNode): void {
     const style = node.getComputedStyle()
     const { x, y, width, height } = node.layout
+
+    // 跳过零尺寸节点
+    if (width <= 0 || height <= 0) return
 
     // 视口裁剪优化：跳过完全不在可视区域内的节点
     const viewTop = this.scrollY
@@ -231,20 +235,24 @@ export class Renderer {
         this.ctx.drawImage(cached.canvas, 0, 0, cached.canvas.width, cached.canvas.height, x, y, width, height)
         return
       } else {
-        // 缓存过期，清除
         this.offscreenCache.delete(node)
       }
     }
 
-    // 透明度处理
-    if (style.opacity !== undefined && style.opacity < 1) {
-      this.ctx.globalAlpha = style.opacity
+    // 判断是否需要保存/恢复上下文状态（减少开销）
+    const hasOpacity = style.opacity !== undefined && style.opacity < 1
+    const hasShadow = !!style.shadowColor
+    const needsSave = hasOpacity || hasShadow
+
+    if (hasOpacity) {
+      this.ctx.globalAlpha = style.opacity!
     }
 
-    // 保存上下文状态
-    this.ctx.save()
+    if (needsSave) {
+      this.ctx.save()
+    }
 
-    // 绘制背景和边框
+    // 绘制背景和边框（跳过无样式的纯容器节点）
     if (style.background || style.border || style.borderColor) {
       this.drawBox(x, y, width, height, style)
     }
@@ -258,16 +266,19 @@ export class Renderer {
     if (node instanceof TextNode) {
       this.drawText(node.text, x, y, width, height, style)
     } else if (node instanceof ButtonNode) {
-      // 按钮先画背景再画文字
       if (!style.background) {
         this.drawBox(x, y, width, height, { ...style, background: '#42b883' })
       }
       this.drawText(node.text, x, y, width, height, style)
     }
 
-    // 恢复上下文状态（包括透明度）
-    this.ctx.restore()
-    this.ctx.globalAlpha = 1
+    // 恢复上下文状态
+    if (needsSave) {
+      this.ctx.restore()
+    }
+    if (hasOpacity) {
+      this.ctx.globalAlpha = 1
+    }
 
     // 递归渲染子节点
     for (const child of node.children) {
@@ -277,13 +288,23 @@ export class Renderer {
 
   /**
    * 绘制盒子（背景 + 边框 + 圆角 + 阴影）
+   * 优化：简单矩形（无圆角、无阴影）使用 fillRect 快速路径
    */
   private drawBox(x: number, y: number, w: number, h: number, style: NodeStyle): void {
     const radius = style.borderRadius || 0
+    const hasShadow = !!style.shadowColor
+    const hasBorder = !!(style.borderColor || style.border)
+
+    // 快速路径：纯色矩形，无圆角，无阴影，无边框
+    if (!radius && !hasShadow && !hasBorder && style.background && typeof style.background === 'string') {
+      this.ctx.fillStyle = style.background
+      this.ctx.fillRect(x, y, w, h)
+      return
+    }
 
     // 阴影
-    if (style.shadowColor) {
-      this.ctx.shadowColor = style.shadowColor
+    if (hasShadow) {
+      this.ctx.shadowColor = style.shadowColor!
       this.ctx.shadowBlur = style.shadowBlur || 0
       this.ctx.shadowOffsetX = style.shadowOffsetX || 0
       this.ctx.shadowOffsetY = style.shadowOffsetY || 0

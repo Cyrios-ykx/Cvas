@@ -188,6 +188,10 @@ export class CanvasNode {
   _layoutDirty: boolean = true
   // 视觉是否需要重绘（脏标记）
   _visualDirty: boolean = true
+  // 测量缓存（避免每帧重复测量未变化的节点）
+  _measureCache: { width: number; height: number } | null = null
+  // 渲染层标记（用于分层渲染优化）
+  _layer: number = 0
 
   constructor(style?: NodeStyle) {
     if (style) this.style = style
@@ -209,10 +213,12 @@ export class CanvasNode {
     if (changeType === StyleChangeType.LAYOUT) {
       this._layoutDirty = true
       this._visualDirty = true
+      this._measureCache = null // 清除测量缓存
       // 布局变更需要向上冒泡标记父节点
       let p = this.parent
       while (p) {
         p._layoutDirty = true
+        p._measureCache = null
         p = p.parent
       }
     } else {

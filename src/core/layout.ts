@@ -182,9 +182,23 @@ export class LayoutEngine {
    * 测量节点的期望尺寸（递归）
    * 如果节点没有指定尺寸，则根据子节点内容自动计算
    * 支持百分比尺寸和 auto 尺寸
+   * 优化：使用 _measureCache 缓存未变化节点的测量结果
    */
   private measureNode(node: CanvasNode, availableWidth: number, availableHeight: number): { width: number; height: number } {
+    // 缓存命中：如果节点未标记为脏且有缓存，直接返回
+    if (!node._layoutDirty && node._measureCache) {
+      return node._measureCache
+    }
+
     const style = node.getComputedStyle()
+
+    // 快速路径：width 和 height 都已明确指定（最常见的动画场景）
+    if (style.width !== undefined && style.height !== undefined) {
+      const result = { width: style.width, height: style.height }
+      node._measureCache = result
+      return result
+    }
+
     const [pt, pr, pb, pl] = parseSpacing(style.padding)
 
     let width = style.width ?? 0
@@ -205,7 +219,9 @@ export class LayoutEngine {
       const textWidth = this.estimateTextWidth(text, fontSize, style.fontWeight)
       if (!style.width && style.widthPercent === undefined) width = textWidth + pl + pr
       if (!style.height && style.heightPercent === undefined) height = fontSize * 1.5 + pt + pb
-      return { width, height }
+      const result = { width, height }
+      node._measureCache = result
+      return result
     }
 
     // 容器节点：根据子节点计算自适应尺寸
@@ -222,7 +238,9 @@ export class LayoutEngine {
       }
     }
 
-    return { width, height }
+    const result = { width, height }
+    node._measureCache = result
+    return result
   }
 
   /**
