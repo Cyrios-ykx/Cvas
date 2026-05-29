@@ -29,6 +29,19 @@
 
 ---
 
+## 📊 Performance
+
+<p align="center">
+  <img src="./public/benchmark-chart.svg" alt="Vuvas vs DOM Performance Benchmark" width="800" />
+</p>
+
+<p align="center">
+  <em>Average <strong>12x faster</strong> than DOM across 8 benchmark tests</em><br/>
+  <sub>Run your own: <code>npm run dev</code> → <a href="http://localhost:3000/benchmarks/">localhost:3000/benchmarks/</a></sub>
+</p>
+
+---
+
 ## ✨ Features
 
 - 🎨 **Vue-like DX** — Reactive data, components, template syntax. If you know Vue, you know Vuvas.

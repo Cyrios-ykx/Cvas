@@ -8,6 +8,7 @@
 import { App } from './core'
 import { mountComponent, type ComponentDef } from './runtime'
 import { onSchedulerFlushed, offSchedulerFlushed } from './scheduler'
+import { installGlobalErrorListeners, setErrorHandler, setWarnHandler, type ErrorHandler, type WarnHandler } from './error'
 
 // ============================================================
 // createVuvasApp
@@ -19,6 +20,13 @@ export interface VuvasAppInstance {
   mount(selector: string): VuvasAppInstance
   /** 卸载应用 */
   unmount(): void
+  /** 配置项 */
+  config: {
+    /** 全局错误处理器 */
+    errorHandler: ErrorHandler | null
+    /** 全局警告处理器 */
+    warnHandler: WarnHandler | null
+  }
   /** 底层 App 实例 */
   _app: App | null
 }
@@ -41,8 +49,23 @@ export function createVuvasApp(rootComponent: ComponentDef, rootProps: Record<st
   // 保存回调引用，确保 unmount 时能正确移除
   let scheduleRenderCb: (() => void) | null = null
 
+  // 安装全局错误监听器
+  installGlobalErrorListeners()
+
   const instance: VuvasAppInstance = {
     _app: null,
+
+    // 配置项：支持设置错误/警告处理器
+    config: {
+      get errorHandler() { return null },
+      set errorHandler(handler: ErrorHandler | null) {
+        setErrorHandler(handler)
+      },
+      get warnHandler() { return null },
+      set warnHandler(handler: WarnHandler | null) {
+        setWarnHandler(handler)
+      }
+    },
 
     mount(selector: string): VuvasAppInstance {
       const canvas = document.querySelector(selector) as HTMLCanvasElement

@@ -29,6 +29,19 @@
 
 ---
 
+## 📊 性能
+
+<p align="center">
+  <img src="./public/benchmark-chart.svg" alt="Vuvas vs DOM 性能基准测试" width="800" />
+</p>
+
+<p align="center">
+  <em>8 项基准测试中平均比 DOM 快 <strong>12 倍</strong></em><br/>
+  <sub>自行测试: <code>npm run dev</code> → <a href="http://localhost:3000/benchmarks/">localhost:3000/benchmarks/</a></sub>
+</p>
+
+---
+
 ## ✨ 特性
 
 - 🎨 **类 Vue 开发体验** — 响应式数据、组件化、模板语法，会 Vue 就会用

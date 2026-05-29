@@ -1,4 +1,5 @@
 import { CanvasNode, type CanvasEvent } from './node'
+import { handleError, ErrorSource } from '../error'
 
 /**
  * 事件管理器
@@ -281,6 +282,7 @@ export class EventManager {
       // 离开旧节点
       if (this.hoveredNode) {
         this.hoveredNode.isHovered = false
+        this.hoveredNode._visualDirty = true
         const leaveEvent = this.createEvent('mouseleave', this.hoveredNode, x, y + this.scrollY)
         this.hoveredNode.emit('mouseleave', leaveEvent)
       }
@@ -288,6 +290,7 @@ export class EventManager {
       // 进入新节点
       if (target) {
         target.isHovered = true
+        target._visualDirty = true
         const enterEvent = this.createEvent('mouseenter', target, x, y + this.scrollY)
         target.emit('mouseenter', enterEvent)
       }
@@ -309,6 +312,7 @@ export class EventManager {
   private handleMouseLeave(): void {
     if (this.hoveredNode) {
       this.hoveredNode.isHovered = false
+      this.hoveredNode._visualDirty = true
       this.hoveredNode = null
       this.canvas.style.cursor = 'default'
       this.onNeedRender?.()
@@ -343,7 +347,11 @@ export class EventManager {
   private dispatchEvent(target: CanvasNode, event: CanvasEvent): void {
     let current: CanvasNode | null = target
     while (current && !event._stopped) {
-      current.emit(event.type, event)
+      try {
+        current.emit(event.type, event)
+      } catch (err) {
+        handleError(err, ErrorSource.EVENT_HANDLER, `event "${event.type}" on <${current.type}>`)
+      }
       current = current.parent
     }
   }

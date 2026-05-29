@@ -21,7 +21,7 @@
  * ```
  */
 
-import { CanvasNode, type NodeStyle } from '../core/node'
+import { CanvasNode, LAYOUT_AFFECTING_PROPS, type NodeStyle } from '../core/node'
 
 // ============================================================
 // 缓动函数
@@ -145,11 +145,13 @@ export function transition(
       const easedProgress = easingFn(progress)
 
       // 插值计算当前值
+      let hasLayoutChange = false
       for (const prop of Object.keys(startValues)) {
         const start = startValues[prop]
         const end = endValues[prop]
         const current = start + (end - start) * easedProgress;
         (node.style as any)[prop] = current
+        if (LAYOUT_AFFECTING_PROPS.has(prop)) hasLayoutChange = true
       }
 
       // 处理颜色过渡（背景色）
@@ -160,11 +162,28 @@ export function transition(
         }
       }
 
+      // 标记节点为脏，确保重绘
+      node._visualDirty = true
+      if (hasLayoutChange) {
+        node._layoutDirty = true
+        node._measureCache = null
+        let p = node.parent
+        while (p) {
+          if (p._layoutDirty) break
+          p._layoutDirty = true
+          p._measureCache = null
+          p = p.parent
+        }
+      }
+
       onUpdate?.()
 
       if (progress >= 1) {
         // 动画完成，设置最终值
         Object.assign(node.style, targetStyle)
+        node._visualDirty = true
+        node._layoutDirty = true
+        node._measureCache = null
         activeAnimations.delete(anim)
         onComplete?.()
         resolve()
@@ -287,6 +306,18 @@ export function animate(
         }
       }
 
+      // 标记节点为脏，确保重绘
+      node._visualDirty = true
+      node._layoutDirty = true
+      node._measureCache = null
+      let p = node.parent
+      while (p) {
+        if (p._layoutDirty) break
+        p._layoutDirty = true
+        p._measureCache = null
+        p = p.parent
+      }
+
       onUpdate?.()
 
       // 检查是否完成当前迭代
@@ -300,6 +331,9 @@ export function animate(
             // 恢复原始状态
             Object.assign(node.style, originalStyle)
           }
+          node._visualDirty = true
+          node._layoutDirty = true
+          node._measureCache = null
           onComplete?.()
           resolve()
           return
@@ -317,6 +351,9 @@ export function animate(
       cancelled = true
       if (rafId) cancelAnimationFrame(rafId)
       Object.assign(node.style, originalStyle)
+      node._visualDirty = true
+      node._layoutDirty = true
+      node._measureCache = null
     },
     promise
   }

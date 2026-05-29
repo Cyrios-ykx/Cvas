@@ -8,6 +8,8 @@
  * - 支持优先级调度：高优先级任务优先执行
  */
 
+import { handleError, ErrorSource } from '../error'
+
 /** 任务优先级 */
 export enum JobPriority {
   /** 同步立即执行（用户输入响应） */
@@ -134,7 +136,12 @@ function flushJobs(): void {
     // 按优先级顺序执行所有任务（已排序）
     for (let i = 0; i < queue.length; i++) {
       const job = queue[i]
-      job.fn()
+      try {
+        job.fn()
+      } catch (err) {
+        // 捕获单个 job 的错误，不影响后续 job 执行
+        handleError(err, ErrorSource.SCHEDULER, `job #${job.id} (priority: ${job.priority})`)
+      }
     }
   } finally {
     // 清空队列
@@ -143,7 +150,11 @@ function flushJobs(): void {
 
     // 通知所有 flush 完成回调（触发 Canvas 重渲染）
     for (const cb of postFlushCallbacks) {
-      cb()
+      try {
+        cb()
+      } catch (err) {
+        handleError(err, ErrorSource.SCHEDULER, 'postFlush callback')
+      }
     }
   }
 }

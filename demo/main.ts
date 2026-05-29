@@ -327,14 +327,8 @@ for (const todo of todos) {
     item.done = !item.done
     // 更新显示
     checkbox.text = item.done ? '✅' : '⬜'
-    item.label.style = {
-      ...item.label.style,
-      color: item.done ? '#16a34a' : '#333333'
-    }
-    row.style = {
-      ...row.style,
-      background: item.done ? '#f0fdf4' : '#fafafa'
-    }
+    item.label.setStyle({ color: item.done ? '#16a34a' : '#333333' })
+    row.setStyle({ background: item.done ? '#f0fdf4' : '#fafafa' })
     row.hoverStyle = { background: item.done ? '#dcfce7' : '#f0f0f0' }
     app.scheduleRender()
   })
@@ -452,7 +446,7 @@ function animateProgress() {
   }
   // 更新进度条宽度（基于父容器宽度的百分比）
   const maxWidth = progressBg.layout.width || 300
-  progressFill.style.width = (progress / 100) * maxWidth
+  progressFill.setLayoutStyle({ width: (progress / 100) * maxWidth })
   progressText.text = `${Math.round(progress)}%`
   app.scheduleRender()
 
@@ -483,7 +477,7 @@ btnResetProgress.on('click', () => {
     animationId = null
   }
   progress = 0
-  progressFill.style.width = 0
+  progressFill.setLayoutStyle({ width: 0 })
   progressText.text = '0%'
   app.scheduleRender()
 })

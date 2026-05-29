@@ -240,13 +240,20 @@ export class CanvasNode {
   /**
    * 快速布局样式更新（跳过检测，直接标记脏）
    * 用于动画等已知是布局属性变更的高频场景
-   * 注意：调用后需要手动标记父节点为脏（或使用 markSubtreeDirty）
    */
   setLayoutStyle(newProps: Partial<NodeStyle>): void {
     Object.assign(this.style, newProps)
     this._layoutDirty = true
     this._visualDirty = true
     this._measureCache = null
+    // 向上冒泡标记父节点
+    let p = this.parent
+    while (p) {
+      if (p._layoutDirty) break
+      p._layoutDirty = true
+      p._measureCache = null
+      p = p.parent
+    }
   }
 
   /**
@@ -281,6 +288,17 @@ export class CanvasNode {
       node.parent = this
       this.children.push(node)
     }
+    // 子节点变化影响布局，标记脏
+    this._layoutDirty = true
+    this._visualDirty = true
+    this._measureCache = null
+    let p = this.parent
+    while (p) {
+      if (p._layoutDirty) break
+      p._layoutDirty = true
+      p._measureCache = null
+      p = p.parent
+    }
     return this
   }
 
@@ -292,6 +310,17 @@ export class CanvasNode {
     if (idx !== -1) {
       this.children.splice(idx, 1)
       node.parent = null
+      // 子节点变化影响布局，标记脏
+      this._layoutDirty = true
+      this._visualDirty = true
+      this._measureCache = null
+      let p = this.parent
+      while (p) {
+        if (p._layoutDirty) break
+        p._layoutDirty = true
+        p._measureCache = null
+        p = p.parent
+      }
     }
     return this
   }
@@ -348,11 +377,32 @@ export class CanvasNode {
  */
 export class TextNode extends CanvasNode {
   type = 'text'
-  text: string
+  private _text: string
+
+  get text(): string {
+    return this._text
+  }
+
+  set text(value: string) {
+    if (this._text === value) return
+    this._text = value
+    // 文本变化可能影响尺寸，标记布局脏
+    this._layoutDirty = true
+    this._visualDirty = true
+    this._measureCache = null
+    // 向上冒泡标记父节点
+    let p = this.parent
+    while (p) {
+      if (p._layoutDirty) break
+      p._layoutDirty = true
+      p._measureCache = null
+      p = p.parent
+    }
+  }
 
   constructor(text: string, style?: NodeStyle) {
     super(style)
-    this.text = text
+    this._text = text
   }
 }
 
@@ -361,7 +411,28 @@ export class TextNode extends CanvasNode {
  */
 export class ButtonNode extends CanvasNode {
   type = 'button'
-  text: string
+  private _text: string
+
+  get text(): string {
+    return this._text
+  }
+
+  set text(value: string) {
+    if (this._text === value) return
+    this._text = value
+    // 文本变化可能影响尺寸，标记布局脏
+    this._layoutDirty = true
+    this._visualDirty = true
+    this._measureCache = null
+    // 向上冒泡标记父节点
+    let p = this.parent
+    while (p) {
+      if (p._layoutDirty) break
+      p._layoutDirty = true
+      p._measureCache = null
+      p = p.parent
+    }
+  }
 
   constructor(text: string, style?: NodeStyle) {
     super({
@@ -374,7 +445,7 @@ export class ButtonNode extends CanvasNode {
       cursor: 'pointer',
       ...style
     })
-    this.text = text
+    this._text = text
     // 默认 hover 效果
     this.hoverStyle = { background: '#3aa876' }
   }
@@ -421,6 +492,8 @@ export class ImageNode extends CanvasNode {
     img.onload = () => {
       this._image = img
       this._loaded = true
+      // 图片加载完成，标记需要重绘
+      this._visualDirty = true
       this._onLoad?.()
     }
     img.onerror = () => {

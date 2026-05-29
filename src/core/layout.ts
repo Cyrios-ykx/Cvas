@@ -59,8 +59,9 @@ export class LayoutEngine {
    */
   private clearDirtyFlags(node: CanvasNode): void {
     node._layoutDirty = false
+    node._visualDirty = false
     for (const child of node.children) {
-      if (child._layoutDirty) {
+      if (child._layoutDirty || child._visualDirty) {
         this.clearDirtyFlags(child)
       }
     }

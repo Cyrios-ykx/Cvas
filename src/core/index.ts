@@ -2,6 +2,7 @@ import { CanvasNode } from './node'
 import { LayoutEngine } from './layout'
 import { Renderer } from './renderer'
 import { EventManager } from './event'
+import { handleError, ErrorSource } from '../error'
 
 export { CanvasNode, TextNode, ButtonNode, ImageNode } from './node'
 export type { NodeStyle, CanvasEvent, EventHandler } from './node'
@@ -55,7 +56,11 @@ export class App {
     if (this._rafId !== null) return
     this._rafId = requestAnimationFrame(() => {
       this._rafId = null
-      this.render()
+      try {
+        this.render()
+      } catch (err) {
+        handleError(err, ErrorSource.RENDER, 'Canvas render loop')
+      }
     })
   }
 

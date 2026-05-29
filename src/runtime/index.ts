@@ -13,6 +13,7 @@
 import { type VNode, h, createNode, patch } from './vnode'
 import { ReactiveEffect, reactive } from '../reactivity'
 import { queueJob } from '../scheduler'
+import { handleError, callWithErrorHandling, ErrorSource } from '../error'
 
 // ============================================================
 // 组件实例
@@ -264,24 +265,32 @@ export function mountComponent(
   let node: import('../core/node').CanvasNode | null = null
 
   const updateFn = () => {
-    if (!instance.isMounted) {
-      // 首次挂载
-      const vnode = instance.render!()
-      node = createNode(vnode)
-      instance.vnode = vnode
-      instance.isMounted = true
+    try {
+      if (!instance.isMounted) {
+        // 首次挂载
+        const vnode = instance.render!()
+        node = createNode(vnode)
+        instance.vnode = vnode
+        instance.isMounted = true
 
-      // 触发 onMounted
-      instance.mounted.forEach(fn => fn())
-    } else {
-      // 更新
-      const prevVNode = instance.vnode!
-      const nextVNode = instance.render!()
-      node = patch(prevVNode, nextVNode)
-      instance.vnode = nextVNode
+        // 触发 onMounted
+        for (const fn of instance.mounted) {
+          callWithErrorHandling(fn, ErrorSource.LIFECYCLE, undefined, `onMounted in <${def.name || 'Anonymous'}>`)
+        }
+      } else {
+        // 更新
+        const prevVNode = instance.vnode!
+        const nextVNode = instance.render!()
+        node = patch(prevVNode, nextVNode)
+        instance.vnode = nextVNode
 
-      // 触发 onUpdated
-      instance.updated.forEach(fn => fn())
+        // 触发 onUpdated
+        for (const fn of instance.updated) {
+          callWithErrorHandling(fn, ErrorSource.LIFECYCLE, undefined, `onUpdated in <${def.name || 'Anonymous'}>`)
+        }
+      }
+    } catch (err) {
+      handleError(err, ErrorSource.RENDER, `component <${def.name || 'Anonymous'}>`)
     }
   }
 
@@ -300,7 +309,9 @@ export function mountComponent(
  * 卸载组件
  */
 export function unmountComponent(instance: ComponentInstance): void {
-  instance.unmounted.forEach(fn => fn())
+  for (const fn of instance.unmounted) {
+    callWithErrorHandling(fn, ErrorSource.LIFECYCLE, undefined, `onUnmounted in <${instance.type.name || 'Anonymous'}>`)
+  }
   instance.effect?.stop()
   instance.isMounted = false
 }

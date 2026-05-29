@@ -153,6 +153,18 @@ export function patch(oldVNode: VNode, newVNode: VNode): CanvasNode {
       const idx = parent.children.indexOf(el)
       parent.children[idx] = newNode
       newNode.parent = parent
+      el.parent = null
+      // 子节点替换影响布局，标记脏
+      parent._layoutDirty = true
+      parent._visualDirty = true
+      parent._measureCache = null
+      let p = parent.parent
+      while (p) {
+        if (p._layoutDirty) break
+        p._layoutDirty = true
+        p._measureCache = null
+        p = p.parent
+      }
     }
     return newNode
   }
@@ -160,14 +172,15 @@ export function patch(oldVNode: VNode, newVNode: VNode): CanvasNode {
   // 类型相同，更新属性
   newVNode.el = el
 
-  // 更新样式
+  // 更新样式（通过 setStyle 正确标记脏）
   if (newVNode.props.style) {
-    el.style = newVNode.props.style
+    el.setStyle(newVNode.props.style)
   }
 
   // 更新 hover 样式
   if (newVNode.props.hoverStyle) {
     el.hoverStyle = newVNode.props.hoverStyle
+    el._visualDirty = true
   }
 
   // 更新文本
@@ -196,7 +209,11 @@ function patchChildren(oldVNode: VNode, newVNode: VNode, parent: CanvasNode): vo
 
   if (newChildren.length === 0) {
     // 新节点没有子节点，清空
-    parent.children = []
+    if (parent.children.length > 0) {
+      parent.children = []
+      parent.markLayoutDirty()
+      parent._visualDirty = true
+    }
     return
   }
 
@@ -248,6 +265,9 @@ function patchChildren(oldVNode: VNode, newVNode: VNode, parent: CanvasNode): vo
   for (const node of newNodes) {
     node.parent = parent
   }
+  // 子节点列表变化，标记布局脏
+  parent.markLayoutDirty()
+  parent._visualDirty = true
 }
 
 // ============================================================
