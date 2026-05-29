@@ -1,11 +1,13 @@
 # Vuvas
 
+**English** | [中文](./README.zh-CN.md)
+
 <p align="center">
-  <strong>Canvas 上的 Vue</strong> —— 一个面向 Canvas 的渐进式 UI 框架
+  <strong>Vue on Canvas</strong> — A progressive UI framework for Canvas
 </p>
 
 <p align="center">
-  让 Web 开发者零学习成本地在 Canvas 中构建界面
+  Build interfaces in Canvas with zero learning curve for Web developers
 </p>
 
 <p align="center">
@@ -16,38 +18,38 @@
 
 ---
 
-## ✨ 特性
+## ✨ Features
 
-- 🎨 **类 Vue 开发体验** — 响应式数据、组件化、模板语法，会 Vue 就会用
-- 📐 **Flexbox 布局** — 像写 CSS 一样布局，不用手动计算坐标
-- ⚡ **事件系统** — 点击、悬停、冒泡，和 DOM 事件一样自然
-- 🖼️ **Canvas 渲染** — 跨端一致、可导出图片、高性能自绘
-- 📦 **渐进式** — 从简单命令式 API 到完整框架，按需使用
+- 🎨 **Vue-like DX** — Reactive data, components, template syntax. If you know Vue, you know Vuvas.
+- 📐 **Flexbox Layout** — Layout like CSS, no manual coordinate calculations.
+- ⚡ **Event System** — Click, hover, bubbling — just like DOM events.
+- 🖼️ **Canvas Rendering** — Cross-platform consistency, image export, high-performance custom drawing.
+- 📦 **Progressive** — From simple imperative API to full framework, use what you need.
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
 ```bash
-# 克隆项目
+# Clone the project
 git clone https://github.com/your-username/vuvas.git
 cd vuvas
 
-# 安装依赖
+# Install dependencies
 npm install
 
-# 启动开发服务器
+# Start dev server
 npm run dev
 ```
 
-浏览器打开 `http://localhost:3000` 即可看到 Demo。
+Open `http://localhost:3000` in your browser to see the Demo.
 
-## 📖 示例
+## 📖 Example
 
 ```typescript
 import { createApp, CanvasNode, TextNode, ButtonNode } from 'vuvas'
 
 const app = createApp('#my-canvas')
 
-// 创建一个 Flexbox 容器
+// Create a Flexbox container
 const container = new CanvasNode({
   display: 'flex',
   flexDirection: 'column',
@@ -56,14 +58,14 @@ const container = new CanvasNode({
   background: '#ffffff'
 })
 
-// 添加文本
+// Add text
 const title = new TextNode('Hello Vuvas!', {
   fontSize: 24,
   color: '#333',
   fontWeight: 'bold'
 })
 
-// 添加按钮（自带 hover 效果）
+// Add a button (with built-in hover effect)
 const btn = new ButtonNode('Click me', {
   padding: [8, 16],
   background: '#42b883',
@@ -77,38 +79,38 @@ container.append(title, btn)
 app.mount(container)
 ```
 
-## 🗺️ 路线图
+## 🗺️ Roadmap
 
-| 阶段 | 内容 | 状态 |
-|------|------|------|
-| **阶段一** | 核心引擎（渲染 + 布局 + 事件）+ Demo | ✅ 进行中 |
-| **阶段二** | 响应式框架（ref/reactive + VNode + 组件系统） | 🔲 计划中 |
-| **阶段三** | 模板编译 + SFC + Vite 插件 | 🔲 计划中 |
+| Phase | Content | Status |
+|-------|---------|--------|
+| **Phase 1** | Core Engine (Renderer + Layout + Events) + Demo | ✅ In Progress |
+| **Phase 2** | Reactive Framework (ref/reactive + VNode + Component System) | 🔲 Planned |
+| **Phase 3** | Template Compiler + SFC + Vite Plugin | 🔲 Planned |
 
-详见 [ARCHITECTURE.md](./ARCHITECTURE.md) 和 [TASKS.md](./TASKS.md)。
+See [ARCHITECTURE.md](./ARCHITECTURE.md) and [TASKS.md](./TASKS.md) for details.
 
-## 🏗️ 项目结构
+## 🏗️ Project Structure
 
 ```
 vuvas/
-├── src/core/         # 核心引擎
-│   ├── node.ts       # 节点定义（样式、事件）
-│   ├── layout.ts     # Flexbox 布局引擎
-│   ├── renderer.ts   # Canvas 渲染器
-│   ├── event.ts      # 事件系统（命中测试 + 冒泡）
-│   └── index.ts      # 入口 + App 类
-├── demo/             # Demo 页面
-│   └── main.ts       # Demo 入口
-├── ARCHITECTURE.md   # 架构方案
-├── TASKS.md          # 任务追踪
-├── CONTRIBUTING.md   # 贡献指南
-└── CHANGELOG.md      # 变更记录
+├── src/core/         # Core engine
+│   ├── node.ts       # Node definitions (styles, events)
+│   ├── layout.ts     # Flexbox layout engine
+│   ├── renderer.ts   # Canvas renderer
+│   ├── event.ts      # Event system (hit-testing + bubbling)
+│   └── index.ts      # Entry + App class
+├── demo/             # Demo page
+│   └── main.ts       # Demo entry
+├── ARCHITECTURE.md   # Architecture design
+├── TASKS.md          # Task tracking
+├── CONTRIBUTING.md   # Contributing guide
+└── CHANGELOG.md      # Changelog
 ```
 
-## 🤝 参与贡献
+## 🤝 Contributing
 
-欢迎任何形式的贡献！请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md) 了解如何参与。
+Contributions of any kind are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) to get started.
 
-## 📄 许可证
+## 📄 License
 
 [MIT](./LICENSE) © Vuvas Contributors

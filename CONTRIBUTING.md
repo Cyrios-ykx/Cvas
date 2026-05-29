@@ -1,69 +1,71 @@
-# 贡献指南
+# Contributing Guide
 
-感谢你对 Vuvas 的关注！我们欢迎任何形式的贡献。
+**English** | [中文](./CONTRIBUTING.zh-CN.md)
 
-## 如何贡献
+Thank you for your interest in Vuvas! We welcome contributions of any kind.
 
-### 报告 Bug
+## How to Contribute
 
-1. 在 [Issues](https://github.com/your-username/vuvas/issues) 中搜索是否已有相同问题
-2. 如果没有，创建一个新的 Issue，并提供：
-   - 问题描述
-   - 复现步骤
-   - 期望行为 vs 实际行为
-   - 环境信息（浏览器、操作系统等）
+### Report Bugs
 
-### 提交功能建议
+1. Search [Issues](https://github.com/your-username/vuvas/issues) to see if the problem has already been reported
+2. If not, create a new Issue with:
+   - Problem description
+   - Steps to reproduce
+   - Expected behavior vs actual behavior
+   - Environment info (browser, OS, etc.)
 
-1. 在 Issues 中创建一个 Feature Request
-2. 描述你想要的功能以及使用场景
-3. 如果可能，提供 API 设计建议
+### Suggest Features
 
-### 提交代码
+1. Create a Feature Request in Issues
+2. Describe the feature you want and its use case
+3. If possible, provide API design suggestions
 
-1. Fork 本仓库
-2. 创建你的特性分支：`git checkout -b feature/my-feature`
-3. 提交你的修改：`git commit -m 'feat: add some feature'`
-4. 推送到分支：`git push origin feature/my-feature`
-5. 创建 Pull Request
+### Submit Code
 
-## 开发环境搭建
+1. Fork this repository
+2. Create your feature branch: `git checkout -b feature/my-feature`
+3. Commit your changes: `git commit -m 'feat: add some feature'`
+4. Push to the branch: `git push origin feature/my-feature`
+5. Create a Pull Request
+
+## Development Setup
 
 ```bash
-# 克隆你 fork 的仓库
+# Clone your forked repository
 git clone https://github.com/your-username/vuvas.git
 cd vuvas
 
-# 安装依赖
+# Install dependencies
 npm install
 
-# 启动开发服务器
+# Start dev server
 npm run dev
 ```
 
-## 代码规范
+## Code Style
 
-- 使用 TypeScript 编写所有源码
-- 注释使用中文
-- 遵循现有代码风格
-- 提交信息遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
-  - `feat:` 新功能
-  - `fix:` 修复 Bug
-  - `docs:` 文档更新
-  - `refactor:` 重构
-  - `test:` 测试相关
-  - `chore:` 构建/工具相关
+- Write all source code in TypeScript
+- Comments in Chinese
+- Follow existing code style
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/):
+  - `feat:` New feature
+  - `fix:` Bug fix
+  - `docs:` Documentation update
+  - `refactor:` Refactoring
+  - `test:` Test related
+  - `chore:` Build/tooling related
 
-## 项目架构
+## Architecture
 
-请阅读 [ARCHITECTURE.md](./ARCHITECTURE.md) 了解项目整体设计。
+Please read [ARCHITECTURE.md](./ARCHITECTURE.md) to understand the overall project design.
 
-## 行为准则
+## Code of Conduct
 
-- 尊重每一位贡献者
-- 保持友善和建设性的讨论
-- 专注于技术本身
+- Respect every contributor
+- Keep discussions friendly and constructive
+- Focus on the technology itself
 
 ---
 
-再次感谢你的贡献！🎉
+Thank you for contributing! 🎉
