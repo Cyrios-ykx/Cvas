@@ -127,26 +127,26 @@
 
 ---
 
-## 阶段四：组件库 + 开发工具
+## 阶段四：组件库 + 开发工具 🔧 进行中
 
 > 目标：让框架真正可用，提供开箱即用的 UI 组件和完善的开发体验
 
 ### 组件库（对标 Element Plus / Ant Design Vue）
-- [ ] Input 输入框（光标、选区、IME 输入法支持）
-- [ ] Select 下拉选择
-- [ ] Checkbox 复选框
-- [ ] Radio 单选框
-- [ ] Switch 开关
-- [ ] Modal 弹窗
-- [ ] Toast / Message 消息提示
-- [ ] Table 表格
-- [ ] Tabs 标签页
-- [ ] Tooltip 工具提示
-- [ ] Dropdown 下拉菜单
-- [ ] Progress 进度条组件
-- [ ] Slider 滑块
-- [ ] 主题系统（样式 token + 主题变量）
-- [ ] 暗色 / 亮色模式切换
+- [x] Input 输入框（光标、选区、IME 输入法支持）
+- [x] Select 下拉选择
+- [x] Checkbox 复选框
+- [x] Radio 单选框
+- [x] Switch 开关
+- [x] Modal 弹窗
+- [x] Toast / Message 消息提示
+- [x] Table 表格
+- [x] Tabs 标签页
+- [x] Tooltip 工具提示
+- [x] Dropdown 下拉菜单
+- [x] Progress 进度条组件
+- [x] Slider 滑块
+- [x] 主题系统（样式 token + 主题变量）
+- [x] 暗色 / 亮色模式切换
 
 ### 表单验证（对标 VeeValidate / FormKit）
 - [ ] 声明式表单校验规则
@@ -158,6 +158,16 @@
 - [ ] 状态检查 & 实时编辑
 - [ ] 事件追踪
 - [ ] 性能分析面板（渲染耗时、重绘次数、帧率监控）
+
+### 性能基准测试（Vuvas vs Vue + DOM）
+- [ ] 基准测试框架搭建（benchmarks/ 目录）
+- [ ] 创建 1000 个节点（首次渲染对比）
+- [ ] 更新 1000 个节点属性（批量更新对比）
+- [ ] 列表重排序（diff 算法效率对比）
+- [ ] 深层嵌套树渲染（递归渲染对比）
+- [ ] 动画帧率对比（60fps 稳定性）
+- [ ] 内存占用对比（节点数 vs 内存曲线）
+- [ ] 自动化报告生成（输出对比图表）
 
 ### CLI 脚手架（对标 create-vue）
 - [ ] `create-vuvas` 命令行工具

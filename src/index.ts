@@ -18,3 +18,6 @@ export { createRouter, useRoute, useRouter, installRouter } from './router'
 export type { RouteRecord, RouteLocation, NavigationGuard, RouterOptions } from './router'
 export { defineStore, addStorePlugin, getStore, clearStores } from './store'
 export type { StoreInstance, StoreMutation, ActionContext, StorePlugin } from './store'
+
+// 组件库
+export * from './components'

@@ -40,6 +40,23 @@
 - 🏪 **Store** — Pinia-like state management with `defineStore`, `$patch`, `$subscribe`.
 - 🔧 **Vite Plugin** — `vite-plugin-vuvas` with HMR & Source Map support.
 
+## 🎯 When to Use Vuvas vs Vue
+
+| Scenario | Vuvas (Canvas) | Vue (DOM) |
+|----------|---------------|-----------|
+| Visual editors (Figma-like, whiteboard, flowchart) | ✅ Best fit | ❌ Painful |
+| Game UI / Interactive H5 | ✅ Best fit | ⚠️ Limited |
+| Image/poster generation | ✅ Native export | ⚠️ Needs hacks |
+| Large-scale data panels (1000+ nodes) | ✅ Performant | ⚠️ Reflow issues |
+| Cross-platform pixel-perfect rendering | ✅ Consistent | ❌ Browser differences |
+| Standard web apps (admin, e-commerce) | ⚠️ Overkill | ✅ Best fit |
+| SEO-required pages | ❌ Not indexable | ✅ Native support |
+| Accessibility (screen readers) | ⚠️ Extra work | ✅ Native support |
+| Rich text editing | ⚠️ Complex | ✅ Native support |
+| Form-heavy applications | ⚠️ Limited | ✅ Best fit |
+
+**TL;DR**: Vue → "content" apps (info display, forms, standard web). Vuvas → "canvas" apps (free positioning, pixel control, graphics-intensive, export needs).
+
 ## 🚀 Quick Start
 
 ```bash
