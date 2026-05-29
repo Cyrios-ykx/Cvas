@@ -44,8 +44,15 @@ export function vuvasPlugin(options: VuvasPluginOptions = {}): any {
     /**
      * 解析模块 ID
      * 让 Vite 识别 .vuvas 文件
+     * 注意：只处理裸模块导入，相对/绝对路径由 Vite 自行解析
      */
     resolveId(id: string) {
+      // 跳过带查询参数的（如 ?raw）
+      if (id.includes('?')) return null
+      // 跳过相对路径（Vite 会自行解析为绝对路径）
+      if (id.startsWith('.')) return null
+      // 跳过已经是绝对路径的
+      if (id.startsWith('/') || id.includes(':')) return null
       if (fileRegex.test(id)) {
         return id
       }
@@ -57,7 +64,11 @@ export function vuvasPlugin(options: VuvasPluginOptions = {}): any {
      * 将 SFC 编译为 JS 模块
      */
     transform(code: string, id: string) {
-      if (!fileRegex.test(id)) return null
+      // 去掉查询参数后再匹配
+      const cleanId = id.split('?')[0]
+      if (!fileRegex.test(cleanId)) return null
+      // 跳过 ?raw 等特殊导入
+      if (id.includes('?')) return null
 
       try {
         const { code: compiledCode, map } = compileSFC(code, id, { sourceMap: true })

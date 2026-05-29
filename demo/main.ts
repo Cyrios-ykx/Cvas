@@ -1,5 +1,8 @@
 import { createApp, CanvasNode, TextNode, ButtonNode } from '../src'
 import { ref, computed, watchEffect } from '../src/reactivity'
+import { compile } from '../src/compiler'
+import { compileSFC } from '../src/compiler/sfc'
+import sfcSource from './App.vuvas?raw'
 
 // ============================================================
 // Vuvas Demo
@@ -758,6 +761,7 @@ const reactiveHint = new TextNode('↑ 点击按钮修改 ref 值，watchEffect 
 reactiveCard.append(reactiveTitle, tempDisplay, tempBtnRow, reactiveHint)
 
 // --- SFC 模板编译展示卡片 ---
+
 const sfcCard = new CanvasNode({
   display: 'flex',
   flexDirection: 'column',
@@ -777,32 +781,8 @@ const sfcTitle = new TextNode('📄 .vuvas 单文件组件 (SFC)', {
   textAlign: 'left'
 })
 
-// 展示 SFC 编译能力
-import { compile } from '../src/compiler'
-import { compileSFC } from '../src/compiler/sfc'
-
-// 模拟一个 .vuvas 文件的编译
-const sfcSource = `<template>
-  <view :style="containerStyle">
-    <text>{{ greeting }}</text>
-    <button @click="toggle">切换</button>
-  </view>
-</template>
-
-<script setup>
-import { ref, computed } from 'vuvas'
-const visible = ref(true)
-const greeting = computed(() => visible.value ? 'Hello Vuvas!' : 'Goodbye!')
-const toggle = () => { visible.value = !visible.value }
-</script>
-
-<style scoped>
-view { background-color: #f0f9ff; padding: 16; border-radius: 8; }
-text { font-size: 16; color: #0369a1; }
-</style>`
-
-// 编译 SFC
-const sfcResult = compileSFC(sfcSource, 'Demo.vuvas', { sourceMap: true })
+// 编译真正的 .vuvas 文件
+const sfcResult = compileSFC(sfcSource, 'App.vuvas', { sourceMap: true })
 
 // 展示编译状态
 const sfcStatus = new TextNode(`✅ 编译成功 | Source Map: ${sfcResult.map ? '已生成' : '无'}`, {
@@ -813,7 +793,7 @@ const sfcStatus = new TextNode(`✅ 编译成功 | Source Map: ${sfcResult.map ?
 })
 
 // 展示 SFC 源码预览
-const sfcPreviewLabel = new TextNode('源码预览 (.vuvas):', {
+const sfcPreviewLabel = new TextNode('源码预览 (App.vuvas):', {
   fontSize: 12,
   color: '#666',
   textAlign: 'left'
@@ -828,8 +808,8 @@ const sfcPreviewBox = new CanvasNode({
   gap: 2
 })
 
-// 显示 SFC 源码的前几行
-const previewLines = sfcSource.split('\n').slice(0, 6)
+// 显示 .vuvas 文件源码的前几行
+const previewLines = sfcSource.split('\n').slice(0, 8)
 for (const line of previewLines) {
   sfcPreviewBox.append(new TextNode(line || ' ', {
     fontSize: 11,
@@ -853,10 +833,10 @@ const templateCompileLabel = new TextNode('模板编译 → 渲染函数:', {
   textAlign: 'left'
 })
 
-const { code: templateCode } = compile(`<view :style="style">
-  <text v-if="show">{{ msg }}</text>
-  <text v-for="item in list" :key="item.id">{{ item.name }}</text>
-</view>`)
+// 从 .vuvas 文件中提取 template 并编译
+const templateMatch = sfcSource.match(/<template>([\s\S]*?)<\/template>/)
+const templateContent = templateMatch ? templateMatch[1].trim() : ''
+const { code: templateCode } = compile(templateContent)
 
 const templateResultBox = new CanvasNode({
   display: 'flex',

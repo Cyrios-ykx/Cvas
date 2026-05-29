@@ -38,6 +38,9 @@ let isFlushPending = false
 /** 任务 ID 计数器 */
 let jobId = 0
 
+/** flush 完成后的回调列表（用于通知 Canvas 重渲染） */
+const postFlushCallbacks: (() => void)[] = []
+
 /** 用于创建微任务的 Promise */
 const resolvedPromise = Promise.resolve()
 
@@ -101,6 +104,26 @@ function queueFlush(): void {
 }
 
 /**
+ * 注册 flush 完成后的回调
+ * 用于在所有组件更新完成后触发 Canvas 重渲染
+ */
+export function onSchedulerFlushed(cb: () => void): void {
+  if (!postFlushCallbacks.includes(cb)) {
+    postFlushCallbacks.push(cb)
+  }
+}
+
+/**
+ * 移除 flush 完成后的回调
+ */
+export function offSchedulerFlushed(cb: () => void): void {
+  const idx = postFlushCallbacks.indexOf(cb)
+  if (idx > -1) {
+    postFlushCallbacks.splice(idx, 1)
+  }
+}
+
+/**
  * 刷新队列，按优先级执行所有待处理的任务
  */
 function flushJobs(): void {
@@ -117,5 +140,10 @@ function flushJobs(): void {
     // 清空队列
     queue.length = 0
     isFlushing = false
+
+    // 通知所有 flush 完成回调（触发 Canvas 重渲染）
+    for (const cb of postFlushCallbacks) {
+      cb()
+    }
   }
 }

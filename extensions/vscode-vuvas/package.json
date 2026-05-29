@@ -1,0 +1,53 @@
+{
+  "name": "vscode-vuvas",
+  "displayName": "Vuvas Language Support",
+  "description": "Language support for .vuvas single-file components (Vuvas framework)",
+  "version": "0.1.0",
+  "publisher": "cyrios-ykx",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "icon": "icons/vuvas-icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cyrios-ykx/html-in-canvas"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "vuvas",
+        "aliases": ["Vuvas", "vuvas"],
+        "extensions": [".vuvas"],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/vuvas-file-light.svg",
+          "dark": "./icons/vuvas-file-dark.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "vuvas",
+        "scopeName": "source.vuvas",
+        "path": "./syntaxes/vuvas.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.js": "javascript",
+          "source.ts": "typescript",
+          "source.css": "css",
+          "text.html.basic": "html"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^2.22.0"
+  }
+}

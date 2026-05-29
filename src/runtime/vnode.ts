@@ -82,7 +82,8 @@ export function h(
   if (typeof children === 'string') {
     text = children
   } else if (Array.isArray(children)) {
-    normalizedChildren = children
+    // 过滤 null/undefined 子节点（v-if 为 false 时会产生 null）
+    normalizedChildren = children.filter(Boolean) as VNode[]
   }
 
   return {

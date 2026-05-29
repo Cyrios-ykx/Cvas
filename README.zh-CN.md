@@ -28,9 +28,17 @@
 
 - 🎨 **类 Vue 开发体验** — 响应式数据、组件化、模板语法，会 Vue 就会用
 - 📐 **Flexbox 布局** — 像写 CSS 一样布局，不用手动计算坐标
-- ⚡ **事件系统** — 点击、悬停、冒泡，和 DOM 事件一样自然
+- ⚡ **事件系统** — 点击、悬停、拖拽、键盘、触摸 — 完整的类 DOM 事件冒泡
 - 🖼️ **Canvas 渲染** — 跨端一致、可导出图片、高性能自绘
 - 📦 **渐进式** — 从简单命令式 API 到完整框架，按需使用
+- 🔄 **响应式系统** — `ref`、`reactive`、`computed`、`watch` — 与 Vue 3 一致
+- 🧩 **组件系统** — `defineComponent`、`setup()`、props、emit、slots、provide/inject
+- 📝 **模板编译器** — `{{ }}`、`v-if`、`v-for`、`v-model`、`@event`、`:prop`、`v-show`
+- 📄 **单文件组件** — `.vuvas` SFC，支持 `<template>`、`<script setup>`、`<style scoped>`
+- 🎬 **动画** — 过渡与动画，内置缓动函数
+- 🗺️ **路由** — Hash/History 模式、动态参数、导航守卫
+- 🏪 **状态管理** — 类 Pinia 的状态管理，支持 `defineStore`、`$patch`、`$subscribe`
+- 🔧 **Vite 插件** — `vite-plugin-vuvas`，支持 HMR 和 Source Map
 
 ## 🚀 快速开始
 
@@ -49,6 +57,8 @@ npm run dev
 浏览器打开 `http://localhost:3000` 即可看到 Demo。
 
 ## 📖 示例
+
+### 命令式 API
 
 ```typescript
 import { createApp, CanvasNode, TextNode, ButtonNode } from 'vuvas'
@@ -85,32 +95,77 @@ container.append(title, btn)
 app.mount(container)
 ```
 
+### 单文件组件 (.vuvas)
+
+```html
+<template>
+  <view :style="{ flexDirection: 'column', padding: 20, gap: 10 }">
+    <text :style="{ fontSize: 24, color: '#333' }">Count: {{ count }}</text>
+    <view
+      @click="increment"
+      :style="{ padding: [8, 16], background: '#42b883', borderRadius: 6 }"
+    >
+      <text :style="{ color: '#fff' }">+1</text>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { ref } from 'vuvas'
+
+const count = ref(0)
+function increment() {
+  count.value++
+}
+</script>
+
+<style scoped>
+view {
+  background: #ffffff;
+}
+</style>
+```
+
 ## 🗺️ 路线图
 
-| 阶段 | 内容 | 状态 |
-|------|------|------|
-| **阶段一** | 核心引擎（渲染 + 布局 + 事件）+ Demo | ✅ 进行中 |
-| **阶段二** | 响应式框架（ref/reactive + VNode + 组件系统） | 🔲 计划中 |
-| **阶段三** | 模板编译 + SFC + Vite 插件 | 🔲 计划中 |
-
-详见 [ARCHITECTURE.md](./ARCHITECTURE.md) 和 [TASKS.md](./TASKS.md)。
+详见 [TASKS.md](./TASKS.md) 了解完整路线图和任务追踪。
 
 ## 🏗️ 项目结构
 
 ```
 vuvas/
-├── src/core/         # 核心引擎
-│   ├── node.ts       # 节点定义（样式、事件）
-│   ├── layout.ts     # Flexbox 布局引擎
-│   ├── renderer.ts   # Canvas 渲染器
-│   ├── event.ts      # 事件系统（命中测试 + 冒泡）
-│   └── index.ts      # 入口 + App 类
-├── demo/             # Demo 页面
-│   └── main.ts       # Demo 入口
-├── ARCHITECTURE.md   # 架构方案
-├── TASKS.md          # 任务追踪
-├── CONTRIBUTING.md   # 贡献指南
-└── CHANGELOG.md      # 变更记录
+├── src/
+│   ├── core/             # 核心引擎
+│   │   ├── node.ts       # 节点定义（样式、事件）
+│   │   ├── layout.ts     # Flexbox 布局引擎
+│   │   ├── renderer.ts   # Canvas 渲染器
+│   │   ├── event.ts      # 事件系统（命中测试 + 冒泡）
+│   │   └── index.ts      # 入口 + App 类
+│   ├── reactivity/       # 响应式系统（ref、reactive、computed、watch）
+│   │   └── index.ts
+│   ├── runtime/          # 运行时（VNode、diff、patch、组件）
+│   │   ├── vnode.ts      # VNode 类型 & diff 算法
+│   │   └── index.ts      # 组件系统 & 生命周期
+│   ├── compiler/         # 模板编译器 & SFC
+│   │   ├── index.ts      # 模板解析器 & 代码生成器
+│   │   ├── sfc.ts        # .vuvas SFC 解析器
+│   │   ├── sourcemap.ts  # Source Map 支持
+│   │   └── vite-plugin.ts # Vite 插件（HMR）
+│   ├── animation/        # 动画系统（过渡、缓动）
+│   │   └── index.ts
+│   ├── router/           # 路由（hash/history、守卫）
+│   │   └── index.ts
+│   ├── store/            # 状态管理（类 Pinia）
+│   │   └── index.ts
+│   ├── scheduler/        # 批量更新调度器
+│   │   └── index.ts
+│   └── index.ts          # 主入口 & 导出
+├── demo/                 # Demo 页面
+│   └── main.ts           # Demo 入口
+├── ARCHITECTURE.md       # 架构方案
+├── TASKS.md              # 任务追踪
+├── CONTRIBUTING.md       # 贡献指南
+└── CHANGELOG.md          # 变更记录
 ```
 
 ## 🤝 参与贡献
@@ -119,4 +174,4 @@ vuvas/
 
 ## 📄 许可证
 
-[MIT](./LICENSE) © Cyrios-ykx
+[MIT](./LICENSE) © 2025-present Cyrios-ykx

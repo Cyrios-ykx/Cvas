@@ -1,0 +1,299 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Vuvas",
+  "scopeName": "source.vuvas",
+  "fileTypes": ["vuvas"],
+  "patterns": [
+    { "include": "#template-block" },
+    { "include": "#script-block" },
+    { "include": "#style-block" },
+    { "include": "#comment-block" }
+  ],
+  "repository": {
+    "comment-block": {
+      "begin": "<!--",
+      "end": "-->",
+      "name": "comment.block.html.vuvas",
+      "patterns": [
+        {
+          "match": ".",
+          "name": "comment.block.html.vuvas"
+        }
+      ]
+    },
+
+    "template-block": {
+      "begin": "(<)(template)(\\b[^>]*)(>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.html.vuvas" },
+        "2": { "name": "entity.name.tag.block.template.vuvas" },
+        "3": { "patterns": [{ "include": "#tag-attributes" }] },
+        "4": { "name": "punctuation.definition.tag.end.html.vuvas" }
+      },
+      "end": "(</)(template)(>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.html.vuvas" },
+        "2": { "name": "entity.name.tag.block.template.vuvas" },
+        "3": { "name": "punctuation.definition.tag.end.html.vuvas" }
+      },
+      "name": "meta.block.template.vuvas",
+      "patterns": [
+        { "include": "#template-content" }
+      ]
+    },
+
+    "template-content": {
+      "patterns": [
+        { "include": "#interpolation" },
+        { "include": "#template-tag" },
+        { "include": "#comment-block" }
+      ]
+    },
+
+    "interpolation": {
+      "begin": "\\{\\{",
+      "end": "\\}\\}",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.interpolation.begin.vuvas" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.interpolation.end.vuvas" }
+      },
+      "name": "meta.interpolation.vuvas",
+      "contentName": "source.js.embedded.vuvas",
+      "patterns": [
+        { "include": "source.js" }
+      ]
+    },
+
+    "template-tag": {
+      "patterns": [
+        { "include": "#self-closing-tag" },
+        { "include": "#open-tag" },
+        { "include": "#close-tag" }
+      ]
+    },
+
+    "self-closing-tag": {
+      "match": "(<)([-\\w]+)((?:\\s+[^>]*?)?)\\s*(/>)",
+      "captures": {
+        "1": { "name": "punctuation.definition.tag.begin.html.vuvas" },
+        "2": { "name": "entity.name.tag.html.vuvas" },
+        "3": { "patterns": [{ "include": "#tag-attributes" }] },
+        "4": { "name": "punctuation.definition.tag.end.html.vuvas" }
+      }
+    },
+
+    "open-tag": {
+      "begin": "(<)([-\\w]+)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.html.vuvas" },
+        "2": { "name": "entity.name.tag.html.vuvas" }
+      },
+      "end": "(/?>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.end.html.vuvas" }
+      },
+      "name": "meta.tag.open.vuvas",
+      "patterns": [
+        { "include": "#tag-attributes" }
+      ]
+    },
+
+    "close-tag": {
+      "match": "(</)([-\\w]+)\\s*(>)",
+      "captures": {
+        "1": { "name": "punctuation.definition.tag.begin.html.vuvas" },
+        "2": { "name": "entity.name.tag.html.vuvas" },
+        "3": { "name": "punctuation.definition.tag.end.html.vuvas" }
+      }
+    },
+
+    "tag-attributes": {
+      "patterns": [
+        { "include": "#vuvas-directive" },
+        { "include": "#event-binding" },
+        { "include": "#prop-binding" },
+        { "include": "#generic-attribute" }
+      ]
+    },
+
+    "vuvas-directive": {
+      "comment": "v-if, v-for, v-show, v-model 等指令",
+      "match": "\\b(v-(?:if|else-if|else|for|show|model|bind|on|slot|html|text|once|memo))(?:(:)([-\\w]+))?\\s*(=)\\s*(\"[^\"]*\"|'[^']*')",
+      "captures": {
+        "1": { "name": "support.type.directive.vuvas" },
+        "2": { "name": "punctuation.separator.directive.vuvas" },
+        "3": { "name": "variable.parameter.directive.argument.vuvas" },
+        "4": { "name": "punctuation.separator.key-value.html.vuvas" },
+        "5": {
+          "patterns": [
+            { "include": "#attribute-value-expression" }
+          ]
+        }
+      }
+    },
+
+    "event-binding": {
+      "comment": "@click, @input 等事件绑定",
+      "match": "(@)([-\\w]+)(?:\\.([-\\w]+))*\\s*(=)\\s*(\"[^\"]*\"|'[^']*')",
+      "captures": {
+        "1": { "name": "punctuation.definition.event.vuvas" },
+        "2": { "name": "entity.other.attribute-name.event.vuvas" },
+        "3": { "name": "entity.other.attribute-name.modifier.vuvas" },
+        "4": { "name": "punctuation.separator.key-value.html.vuvas" },
+        "5": {
+          "patterns": [
+            { "include": "#attribute-value-expression" }
+          ]
+        }
+      }
+    },
+
+    "prop-binding": {
+      "comment": ":style, :class 等属性绑定",
+      "match": "(:)([-\\w]+)\\s*(=)\\s*(\"[^\"]*\"|'[^']*')",
+      "captures": {
+        "1": { "name": "punctuation.definition.binding.vuvas" },
+        "2": { "name": "entity.other.attribute-name.binding.vuvas" },
+        "3": { "name": "punctuation.separator.key-value.html.vuvas" },
+        "4": {
+          "patterns": [
+            { "include": "#attribute-value-expression" }
+          ]
+        }
+      }
+    },
+
+    "generic-attribute": {
+      "comment": "普通 HTML 属性",
+      "match": "\\b([-\\w]+)\\s*(=)\\s*(\"[^\"]*\"|'[^']*')",
+      "captures": {
+        "1": { "name": "entity.other.attribute-name.html.vuvas" },
+        "2": { "name": "punctuation.separator.key-value.html.vuvas" },
+        "3": { "name": "string.quoted.html.vuvas" }
+      }
+    },
+
+    "attribute-value-expression": {
+      "patterns": [
+        {
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.vuvas" } },
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.vuvas" } },
+          "contentName": "source.js.embedded.vuvas",
+          "patterns": [
+            { "include": "source.js" }
+          ]
+        },
+        {
+          "begin": "'",
+          "end": "'",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.vuvas" } },
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.vuvas" } },
+          "contentName": "source.js.embedded.vuvas",
+          "patterns": [
+            { "include": "source.js" }
+          ]
+        }
+      ]
+    },
+
+    "script-block": {
+      "begin": "(<)(script)((?:\\s+[^>]*?)?)\\s*(>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.html.vuvas" },
+        "2": { "name": "entity.name.tag.block.script.vuvas" },
+        "3": {
+          "patterns": [
+            {
+              "match": "\\b(setup|lang)\\s*(=)\\s*(\"[^\"]*\"|'[^']*'|\\w+)",
+              "captures": {
+                "1": { "name": "entity.other.attribute-name.html.vuvas" },
+                "2": { "name": "punctuation.separator.key-value.html.vuvas" },
+                "3": { "name": "string.quoted.html.vuvas" }
+              }
+            },
+            {
+              "match": "\\b(setup)\\b",
+              "name": "entity.other.attribute-name.html.vuvas"
+            }
+          ]
+        },
+        "4": { "name": "punctuation.definition.tag.end.html.vuvas" }
+      },
+      "end": "(</)(script)(>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.html.vuvas" },
+        "2": { "name": "entity.name.tag.block.script.vuvas" },
+        "3": { "name": "punctuation.definition.tag.end.html.vuvas" }
+      },
+      "name": "meta.block.script.vuvas",
+      "patterns": [
+        { "include": "#script-content-ts" },
+        { "include": "#script-content-js" }
+      ]
+    },
+
+    "script-content-ts": {
+      "comment": "当 lang=\"ts\" 时嵌入 TypeScript",
+      "begin": "(?<=<script[^>]*lang\\s*=\\s*[\"']ts[\"'][^>]*>)",
+      "end": "(?=</script>)",
+      "contentName": "source.ts.embedded.vuvas",
+      "patterns": [
+        { "include": "source.ts" }
+      ]
+    },
+
+    "script-content-js": {
+      "comment": "默认嵌入 JavaScript/TypeScript",
+      "begin": "\\G",
+      "end": "(?=</script>)",
+      "contentName": "source.js.embedded.vuvas",
+      "patterns": [
+        { "include": "source.js" }
+      ]
+    },
+
+    "style-block": {
+      "begin": "(<)(style)((?:\\s+[^>]*?)?)\\s*(>)",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.html.vuvas" },
+        "2": { "name": "entity.name.tag.block.style.vuvas" },
+        "3": {
+          "patterns": [
+            {
+              "match": "\\b(scoped|module|lang)\\s*(=)?\\s*(\"[^\"]*\"|'[^']*')?",
+              "captures": {
+                "1": { "name": "entity.other.attribute-name.html.vuvas" },
+                "2": { "name": "punctuation.separator.key-value.html.vuvas" },
+                "3": { "name": "string.quoted.html.vuvas" }
+              }
+            }
+          ]
+        },
+        "4": { "name": "punctuation.definition.tag.end.html.vuvas" }
+      },
+      "end": "(</)(style)(>)",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.tag.begin.html.vuvas" },
+        "2": { "name": "entity.name.tag.block.style.vuvas" },
+        "3": { "name": "punctuation.definition.tag.end.html.vuvas" }
+      },
+      "name": "meta.block.style.vuvas",
+      "patterns": [
+        { "include": "#style-content" }
+      ]
+    },
+
+    "style-content": {
+      "begin": "\\G",
+      "end": "(?=</style>)",
+      "contentName": "source.css.embedded.vuvas",
+      "patterns": [
+        { "include": "source.css" }
+      ]
+    }
+  }
+}

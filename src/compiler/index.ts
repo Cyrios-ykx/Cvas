@@ -407,8 +407,18 @@ function genElement(node: ASTElement): string {
   // 生成子节点
   let childrenStr = ''
   if (node.children.length > 0) {
-    const childCodes = node.children.map(c => genNode(c))
-    childrenStr = `[${childCodes.join(', ')}]`
+    // 对于 text/button 类型，将子内容拼接为字符串（因为 TextNode/ButtonNode 是叶子节点）
+    if (node.tag === 'text' || node.tag === 'button') {
+      const textParts = node.children.map(c => {
+        if (c.type === ASTNodeType.TEXT) return JSON.stringify(c.content)
+        if (c.type === ASTNodeType.INTERPOLATION) return `String(${(c as ASTInterpolation).expression})`
+        return '""'
+      })
+      childrenStr = textParts.join(' + ')
+    } else {
+      const childCodes = node.children.map(c => genNode(c))
+      childrenStr = `[${childCodes.join(', ')}]`
+    }
   }
 
   let code = `h(${tag}, ${propsStr}${childrenStr ? ', ' + childrenStr : ''})`

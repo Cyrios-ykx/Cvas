@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/Vuvas.png" />
-  <title>Vuvas Demo</title>
+  <title>Vuvas SFC Preview</title>
   <style>
     * {
       margin: 0;
@@ -34,17 +34,21 @@
       border-radius: 12px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     }
+    .hint {
+      color: #666;
+      margin-top: 12px;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
-  <h1><img src="/Vuvas.png" alt="Vuvas" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 8px;">Vuvas Demo</h1>
-  <p class="subtitle">Canvas 上的 Vue — 零学习成本在 Canvas 中构建界面</p>
+  <h1>
+    <img src="/Vuvas.png" alt="Vuvas" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 8px;">
+    Vuvas SFC Preview
+  </h1>
+  <p class="subtitle">直接预览 .vuvas 单文件组件 — createVuvasApp(App).mount('#app')</p>
   <canvas id="app" width="800" height="600"></canvas>
-  <p class="subtitle" style="margin-top: 12px; font-size: 12px;">🖱️ 使用鼠标滚轮滚动查看更多内容</p>
-  <p class="subtitle" style="margin-top: 8px; font-size: 12px;">
-    <a href="/sfc.html" style="color: #42b883; text-decoration: none;">📦 查看 SFC 预览 →</a>
-    <span style="margin-left: 8px; color: #555;">createVuvasApp(App).mount('#app')</span>
-  </p>
-  <script type="module" src="/demo/main.ts"></script>
+  <p class="hint">🖱️ 使用鼠标滚轮滚动查看更多内容</p>
+  <script type="module" src="/demo/sfc-main.ts"></script>
 </body>
 </html>

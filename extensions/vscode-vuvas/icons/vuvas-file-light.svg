@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- 文件外框 -->
+  <path d="M6 2h14l8 8v20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#f7fafc" stroke="#cbd5e0" stroke-width="0.5"/>
+  <!-- 折角 -->
+  <path d="M20 2v6a2 2 0 0 0 2 2h6" fill="#e2e8f0"/>
+  <!-- Vuvas 标志 V -->
+  <path d="M10 14l6 12l6-12" stroke="#42b883" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- 内部小 V -->
+  <path d="M13 14l3 6l3-6" stroke="#35495e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

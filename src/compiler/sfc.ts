@@ -227,7 +227,7 @@ export interface SFCCompileResult {
  * export default defineComponent({
  *   setup() {
  *     // script setup 内容
- *     return () => { /* 编译后的渲染函数 *\/ }
+ *     return () => h('view', ...) // 编译后的渲染函数
  *   }
  * })
  * ```
@@ -250,20 +250,51 @@ export function compileSFC(source: string, filename?: string, options?: { source
       return ''
     }).trim()
 
-    // 生成 import 语句
-    code += imports.join('\n')
-    if (imports.length > 0) code += '\n\n'
+    // 重写 import：将 from 'vuvas' 的导入合并处理
+    const vuvasImports: Set<string> = new Set(['defineComponent', 'h', 'compile', 'unref'])
+    const otherImports: string[] = []
 
-    // 确保导入了 defineComponent 和 h
-    if (!imports.some(imp => imp.includes('defineComponent'))) {
-      code = `import { defineComponent, h } from 'vuvas'\n` + code
+    for (const imp of imports) {
+      // 匹配 import { xxx } from 'vuvas'
+      const vuvasMatch = imp.match(/^import\s+\{([^}]+)\}\s+from\s+['"]vuvas['"]$/)
+      if (vuvasMatch) {
+        // 提取导入的标识符
+        const names = vuvasMatch[1].split(',').map(s => s.trim()).filter(Boolean)
+        names.forEach(n => vuvasImports.add(n))
+      } else {
+        otherImports.push(imp)
+      }
     }
 
+    // 生成合并后的 vuvas import
+    code += `import { ${Array.from(vuvasImports).join(', ')} } from 'vuvas'\n`
+    if (otherImports.length > 0) {
+      code += otherImports.join('\n') + '\n'
+    }
+    code += '\n'
+
+    // 处理 <style>（生成样式对象，在 setup 外部）
+    let styleVarCode = ''
+    const styleVarNames: string[] = []
+    if (descriptor.styles.length > 0) {
+      const styleResult = generateStyleObject(descriptor.styles)
+      styleVarCode = styleResult.code
+      styleVarNames.push(...styleResult.varNames)
+    }
+
+    if (styleVarCode) {
+      code += styleVarCode + '\n\n'
+    }
+
+    // 从 script body 中提取所有顶层变量/函数声明的名称
+    const setupVarNames = extractDeclaredNames(scriptBody)
+    // 合并样式变量名
+    const allVarNames = [...setupVarNames, ...styleVarNames]
+
     // 生成模板的渲染函数代码
-    let renderCode = 'null'
+    let renderCode = '() => null'
     if (descriptor.template) {
-      // 这里生成内联渲染函数
-      renderCode = generateInlineRender(descriptor.template.content)
+      renderCode = generateInlineRender(descriptor.template.content, allVarNames)
     }
 
     // 生成组件定义
@@ -279,12 +310,6 @@ export function compileSFC(source: string, filename?: string, options?: { source
   } else if (descriptor.script) {
     // 普通 <script>，直接使用
     code = descriptor.script.content
-  }
-
-  // 处理 <style>（生成样式对象）
-  if (descriptor.styles.length > 0) {
-    const styleCode = generateStyleCode(descriptor.styles)
-    code += '\n' + styleCode
   }
 
   // 生成 Source Map
@@ -307,17 +332,76 @@ export function compileSFC(source: string, filename?: string, options?: { source
 }
 
 /**
- * 生成内联渲染函数代码
- * 将模板编译为 () => h(...) 形式
+ * 从 script body 中提取所有顶层声明的变量/函数名
+ * 支持 const, let, var, function 声明
  */
-function generateInlineRender(template: string): string {
-  // 复用编译器的 compile 逻辑
-  // 这里简化处理：生成一个箭头函数
-  return `() => {\n      // 模板编译结果（运行时编译）\n      const { compile } = require('vuvas')\n      const { render } = compile(${JSON.stringify(template)})\n      return render({ /* ctx */ }, h)\n    }`
+function extractDeclaredNames(scriptBody: string): string[] {
+  const names: string[] = []
+
+  // 匹配 const/let/var 声明
+  const varRegex = /(?:const|let|var)\s+(\w+)/g
+  let match: RegExpExecArray | null
+  while ((match = varRegex.exec(scriptBody)) !== null) {
+    names.push(match[1])
+  }
+
+  // 匹配 function 声明
+  const funcRegex = /function\s+(\w+)/g
+  while ((match = funcRegex.exec(scriptBody)) !== null) {
+    names.push(match[1])
+  }
+
+  return names
 }
 
 /**
- * 生成样式代码
+ * 生成内联渲染函数代码
+ * 将模板编译为 () => h(...) 形式
+ *
+ * 直接在编译期将模板转为 h() 调用，无需运行时编译
+ * 自动为插值表达式添加 unref() 解包
+ */
+function generateInlineRender(template: string, setupVars: string[]): string {
+  // 生成运行时编译的渲染函数
+  // compile 函数已通过顶部 import 从 'vuvas' 引入
+  // 运行时会在浏览器中执行 compile 将模板编译为 h() 调用
+  // 通过 _ctx 对象将 setup 中的变量传递给渲染函数（render 内部使用 with(_ctx)）
+  const escapedTemplate = JSON.stringify(template)
+
+  // 构造 _ctx 对象：将所有 setup 变量和样式变量传入，对 ref/computed 自动解包
+  const ctxEntries = setupVars.map(v => `${v}: unref(${v})`).join(', ')
+
+  return `() => {
+      const _ctx = { ${ctxEntries}, h }
+      const { render: _render } = compile(${escapedTemplate})
+      const _nodes = _render(_ctx, h).filter(Boolean)
+      return _nodes.length === 1 ? _nodes[0] : h('view', null, _nodes)
+    }`
+}
+
+/**
+ * 生成样式对象代码（作为模块级变量）
+ * 将 CSS-like 语法转为 JS 样式对象
+ */
+function generateStyleObject(styles: SFCStyleBlock[]): { code: string; varNames: string[] } {
+  let code = '// 样式定义\n'
+  const varNames: string[] = []
+
+  for (const style of styles) {
+    const rules = parseCSSRules(style.content)
+    for (const [selector, properties] of Object.entries(rules)) {
+      // 将 .containerStyle 转为 const containerStyle = {...}
+      const varName = selector.startsWith('.') ? selector.slice(1) : `__style_${selector}__`
+      code += `const ${varName} = ${JSON.stringify(properties)}\n`
+      varNames.push(varName)
+    }
+  }
+
+  return { code, varNames }
+}
+
+/**
+ * 生成样式代码（旧版兼容）
  * 将 CSS-like 语法转为 Vuvas 样式对象
  */
 function generateStyleCode(styles: SFCStyleBlock[]): string {
@@ -361,9 +445,19 @@ function parseCSSRules(css: string): Record<string, Record<string, string | numb
       // 将 CSS 属性名转为 camelCase
       const camelProp = prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
 
-      // 尝试转为数字
+      // 尝试转为数字或数字数组
       const numValue = Number(value)
-      properties[camelProp] = isNaN(numValue) ? value : numValue
+      if (!isNaN(numValue)) {
+        properties[camelProp] = numValue
+      } else {
+        // 尝试解析为数字数组（如 padding: 8 16 → [8, 16]）
+        const parts = value.split(/\s+/)
+        if (parts.length > 1 && parts.every(p => !isNaN(Number(p)))) {
+          properties[camelProp] = parts.map(Number) as any
+        } else {
+          properties[camelProp] = value
+        }
+      }
     }
 
     rules[selector] = properties

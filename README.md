@@ -128,13 +128,7 @@ view {
 
 ## 🗺️ Roadmap
 
-| Phase | Content | Status |
-|-------|---------|--------|
-| **Phase 1** | Core Engine (Renderer + Layout + Events) + Demo | ✅ Done |
-| **Phase 2** | Reactive Framework (ref/reactive + VNode + Component System) | ✅ Done |
-| **Phase 3** | Template Compiler + SFC + Ecosystem | ✅ In Progress |
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) and [TASKS.md](./TASKS.md) for details.
+See [TASKS.md](./TASKS.md) for the full roadmap and task tracking.
 
 ## 🏗️ Project Structure
 
@@ -180,4 +174,4 @@ Contributions of any kind are welcome! Please read [CONTRIBUTING.md](./CONTRIBUT
 
 ## 📄 License
 
-[MIT](./LICENSE) © Cyrios-ykx
+[MIT](./LICENSE) © 2025-present Cyrios-ykx
