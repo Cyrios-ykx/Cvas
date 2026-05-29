@@ -473,15 +473,18 @@ export async function benchAnimationFps(): Promise<FrameRateResult> {
       }
       lastFrameTime = currentTime
 
-      // 更新节点样式（width/height 是布局属性，需要重新计算布局）
+      // 更新节点样式（使用快速路径，跳过属性检测开销）
       for (let i = 0; i < ANIMATE_COUNT; i++) {
         const t = elapsed / 1000
         const offset = Math.sin(t * 2 + i * 0.1) * 5
-        vuvasRoot.children[i].setStyle({
+        vuvasRoot.children[i].setLayoutStyle({
           width: 40 + offset,
           height: 40 + offset
         })
       }
+      // 一次性标记父节点脏（避免每个子节点都向上冒泡）
+      vuvasRoot._layoutDirty = true
+      vuvasRoot._measureCache = null
 
       // 使用增量布局（仅在有布局变更时才重新计算）
       layoutEngine.computeLayoutIfNeeded(vuvasRoot, 800, 600)
@@ -941,10 +944,12 @@ export async function benchHitTest(): Promise<BenchmarkResult> {
     domWrapper.appendChild(div)
   }
   container.appendChild(domWrapper)
-  // 让 DOM 容器可见以便 elementFromPoint 工作
+  // 让 DOM 容器可见以便 elementFromPoint 工作（使用 opacity:0 避免白屏闪烁）
   container.style.position = 'fixed'
   container.style.top = '0'
   container.style.left = '0'
+  container.style.opacity = '0'
+  container.style.zIndex = '99999'
   void container.offsetHeight
 
   const domTime = await runBench(() => {
@@ -959,6 +964,8 @@ export async function benchHitTest(): Promise<BenchmarkResult> {
   container.style.position = 'fixed'
   container.style.top = '-9999px'
   container.style.left = '-9999px'
+  container.style.opacity = ''
+  container.style.zIndex = ''
 
   return {
     name: '命中测试 (2000 节点 × 1000 次)',

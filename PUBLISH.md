@@ -88,8 +88,8 @@ npm info vuvas --registry https://registry.npmjs.org/
 ### Demo 部署
 - [x] 创建 `.github/workflows/deploy.yml`
 - [x] 自动构建 Demo 页面
-- [ ] 部署到 GitHub Pages
-- [ ] README 中添加在线 Demo 链接
+- [x] 部署到 GitHub Pages
+- [x] README 中添加在线 Demo 链接
 
 ---
 

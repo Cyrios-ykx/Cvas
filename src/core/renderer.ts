@@ -35,15 +35,36 @@ export class Renderer {
 
     // 处理高 DPI 屏幕
     this.dpr = window.devicePixelRatio || 1
-    this.width = canvas.width
-    this.height = canvas.height
 
-    // 设置 Canvas 实际像素尺寸
-    canvas.width = this.width * this.dpr
-    canvas.height = this.height * this.dpr
+    // 确定逻辑尺寸（CSS 像素）
+    // 优先使用 CSS style 中的尺寸（说明已经被初始化过）
+    // 否则使用 HTML 属性中的 width/height 作为逻辑尺寸（首次初始化）
+    const cssWidth = canvas.style.width ? parseInt(canvas.style.width) : 0
+    const cssHeight = canvas.style.height ? parseInt(canvas.style.height) : 0
+
+    if (cssWidth > 0 && cssHeight > 0) {
+      // 已经初始化过，使用 CSS 尺寸作为逻辑尺寸
+      this.width = cssWidth
+      this.height = cssHeight
+    } else {
+      // 首次初始化，HTML 属性中的值就是逻辑尺寸
+      this.width = canvas.width
+      this.height = canvas.height
+    }
+
+    // 设置 Canvas 物理像素尺寸（仅在需要时）
+    const expectedPhysicalWidth = Math.round(this.width * this.dpr)
+    const expectedPhysicalHeight = Math.round(this.height * this.dpr)
+
+    if (canvas.width !== expectedPhysicalWidth || canvas.height !== expectedPhysicalHeight) {
+      canvas.width = expectedPhysicalWidth
+      canvas.height = expectedPhysicalHeight
+    }
     canvas.style.width = `${this.width}px`
     canvas.style.height = `${this.height}px`
-    this.ctx.scale(this.dpr, this.dpr)
+
+    // 重置变换矩阵并应用 DPR 缩放
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
   }
 
   /**
@@ -302,6 +323,15 @@ export class Renderer {
       return
     }
 
+    // 快速路径：纯色 + 圆角，无阴影，无边框（动画中最常见的场景）
+    if (radius && !hasShadow && !hasBorder && style.background && typeof style.background === 'string') {
+      this.ctx.fillStyle = style.background
+      this.ctx.beginPath()
+      this.roundRect(x, y, w, h, radius)
+      this.ctx.fill()
+      return
+    }
+
     // 阴影
     if (hasShadow) {
       this.ctx.shadowColor = style.shadowColor!
@@ -551,6 +581,7 @@ export class Renderer {
 
   /**
    * 绘制圆角矩形路径
+   * 优化：优先使用 Canvas 原生 roundRect API（性能更好）
    */
   private roundRect(x: number, y: number, w: number, h: number, r: number): void {
     if (r <= 0) {
@@ -558,6 +589,12 @@ export class Renderer {
       return
     }
     r = Math.min(r, w / 2, h / 2)
+    // 使用原生 roundRect API（Chrome 99+, Firefox 112+, Safari 15.4+）
+    if (this.ctx.roundRect) {
+      this.ctx.roundRect(x, y, w, h, r)
+      return
+    }
+    // 回退方案：使用 arcTo
     this.ctx.moveTo(x + r, y)
     this.ctx.arcTo(x + w, y, x + w, y + h, r)
     this.ctx.arcTo(x + w, y + h, x, y + h, r)

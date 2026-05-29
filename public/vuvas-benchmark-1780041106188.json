@@ -1,0 +1,121 @@
+{
+  "title": "Vuvas 性能基准测试报告",
+  "timestamp": "2026-05-29T07:51:46.187Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+  "results": [
+    {
+      "name": "创建 1000 个节点",
+      "description": "从零创建 1000 个文本节点并完成首次渲染（含布局计算）",
+      "vuvasTime": 0.87,
+      "domTime": 16.95,
+      "unit": "ms",
+      "ratio": 19.56
+    },
+    {
+      "name": "更新 1000 个节点属性",
+      "description": "批量更新 1000 个节点的背景色（优化：跳过布局计算 + 脏区域重绘）",
+      "vuvasTime": 0.4,
+      "domTime": 0.7,
+      "unit": "ms",
+      "ratio": 1.75
+    },
+    {
+      "name": "列表重排序 (1000 项)",
+      "description": "随机打乱 1000 个节点的顺序，测试 diff/patch 效率",
+      "vuvasTime": 0.53,
+      "domTime": 14.22,
+      "unit": "ms",
+      "ratio": 26.66
+    },
+    {
+      "name": "深层嵌套树渲染",
+      "description": "深度 7，每层 3 个子节点（共 2187 个叶子节点）",
+      "vuvasTime": 4.57,
+      "domTime": 38.3,
+      "unit": "ms",
+      "ratio": 8.39
+    },
+    {
+      "name": "动画帧率 (100 节点)",
+      "description": "持续 2 秒，每帧更新 100 个节点的尺寸",
+      "vuvasFps": 60,
+      "domFps": 60.5,
+      "vuvasDropped": 0,
+      "domDropped": 0,
+      "unit": "fps",
+      "ratio": 0.99
+    },
+    {
+      "name": "内存占用对比",
+      "description": "不同节点数量下的 JS 堆内存占用（需要 Chrome --enable-precise-memory-info）",
+      "points": [
+        {
+          "nodeCount": 100,
+          "vuvasMemory": 0,
+          "domMemory": 0
+        },
+        {
+          "nodeCount": 500,
+          "vuvasMemory": 0,
+          "domMemory": 0
+        },
+        {
+          "nodeCount": 1000,
+          "vuvasMemory": 0,
+          "domMemory": 0
+        },
+        {
+          "nodeCount": 2000,
+          "vuvasMemory": 3456,
+          "domMemory": 0
+        },
+        {
+          "nodeCount": 5000,
+          "vuvasMemory": 0,
+          "domMemory": 0
+        }
+      ],
+      "unit": "KB"
+    },
+    {
+      "name": "列表翻页 (500 项创建+销毁)",
+      "description": "模拟翻页：销毁旧列表 + 创建新列表 + 渲染（含随机样式计算）",
+      "vuvasTime": 0.18,
+      "domTime": 4.38,
+      "unit": "ms",
+      "ratio": 23.91
+    },
+    {
+      "name": "条件渲染切换 (200 项)",
+      "description": "频繁切换两组 200 个节点的显示/隐藏（模拟 v-if）",
+      "vuvasTime": 0.33,
+      "domTime": 0.78,
+      "unit": "ms",
+      "ratio": 2.35
+    },
+    {
+      "name": "复杂样式渲染 (300 节点)",
+      "description": "每个节点含渐变背景 + 阴影 + 圆角 + 边框（模拟卡片列表）",
+      "vuvasTime": 0.3,
+      "domTime": 3.07,
+      "unit": "ms",
+      "ratio": 10.22
+    },
+    {
+      "name": "响应式数据更新 (100 项 / 20% 变更)",
+      "description": "模拟真实场景：数据变化 → diff/patch → 重新渲染（仅更新变化的部分）",
+      "vuvasTime": 0.25,
+      "domTime": 0.15,
+      "unit": "ms",
+      "ratio": 0.6
+    },
+    {
+      "name": "命中测试 (2000 节点 × 1000 次)",
+      "description": "在 2000 个节点中执行 1000 次随机坐标命中测试",
+      "vuvasTime": 5,
+      "domTime": 16.63,
+      "unit": "ms",
+      "ratio": 3.33
+    }
+  ]
+}

@@ -238,6 +238,34 @@ export class CanvasNode {
   }
 
   /**
+   * 快速布局样式更新（跳过检测，直接标记脏）
+   * 用于动画等已知是布局属性变更的高频场景
+   * 注意：调用后需要手动标记父节点为脏（或使用 markSubtreeDirty）
+   */
+  setLayoutStyle(newProps: Partial<NodeStyle>): void {
+    Object.assign(this.style, newProps)
+    this._layoutDirty = true
+    this._visualDirty = true
+    this._measureCache = null
+  }
+
+  /**
+   * 标记整棵子树需要重新布局（从当前节点向上冒泡）
+   * 用于批量更新后一次性标记，避免每个子节点都向上冒泡
+   */
+  markLayoutDirty(): void {
+    this._layoutDirty = true
+    this._measureCache = null
+    let p = this.parent
+    while (p) {
+      if (p._layoutDirty) break // 已经标记过，无需继续
+      p._layoutDirty = true
+      p._measureCache = null
+      p = p.parent
+    }
+  }
+
+  /**
    * 重置脏标记
    */
   clearDirty(): void {
