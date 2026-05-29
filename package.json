@@ -1,6 +1,7 @@
 {
   "name": "vuvas",
   "version": "0.1.0",
+  "description": "Canvas 上的 Vue —— 让开发者用类 Vue 的方式开发渲染在 Canvas 上的 UI",
   "private": true,
   "type": "module",
   "scripts": {

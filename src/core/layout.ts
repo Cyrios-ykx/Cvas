@@ -54,11 +54,15 @@ export class LayoutEngine {
     const justify = style.justifyContent || 'flex-start'
     const align = style.alignItems || 'stretch'
     const gap = style.gap || 0
+    const flexWrap = style.flexWrap || 'nowrap'
 
     // 计算子节点尺寸（递归测量）
     const childSizes = node.children.map(child => this.measureNode(child, contentWidth, contentHeight))
 
-    if (direction === 'row') {
+    // flexWrap 处理
+    if (flexWrap === 'wrap') {
+      this.layoutWrap(node.children, childSizes, contentX, contentY, contentWidth, contentHeight, direction, justify, align, gap)
+    } else if (direction === 'row') {
       this.layoutRow(node.children, childSizes, contentX, contentY, contentWidth, contentHeight, justify, align, gap)
     } else {
       this.layoutColumn(node.children, childSizes, contentX, contentY, contentWidth, contentHeight, justify, align, gap)
@@ -71,8 +75,81 @@ export class LayoutEngine {
   }
 
   /**
+   * flexWrap 布局：当子元素超出容器时自动换行
+   */
+  private layoutWrap(
+    children: CanvasNode[],
+    sizes: { width: number; height: number }[],
+    x: number, y: number,
+    width: number, height: number,
+    direction: string, justify: string, align: string, gap: number
+  ): void {
+    if (direction === 'row') {
+      // 水平方向换行
+      const lines: { children: CanvasNode[]; sizes: { width: number; height: number }[]; lineHeight: number }[] = []
+      let currentLine: { children: CanvasNode[]; sizes: { width: number; height: number }[]; lineHeight: number } = { children: [], sizes: [], lineHeight: 0 }
+      let currentWidth = 0
+
+      for (let i = 0; i < children.length; i++) {
+        const childWidth = sizes[i].width
+        const childHeight = sizes[i].height
+
+        // 判断是否需要换行
+        if (currentLine.children.length > 0 && currentWidth + gap + childWidth > width) {
+          lines.push(currentLine)
+          currentLine = { children: [], sizes: [], lineHeight: 0 }
+          currentWidth = 0
+        }
+
+        currentLine.children.push(children[i])
+        currentLine.sizes.push(sizes[i])
+        currentLine.lineHeight = Math.max(currentLine.lineHeight, childHeight)
+        currentWidth += (currentLine.children.length > 1 ? gap : 0) + childWidth
+      }
+      if (currentLine.children.length > 0) lines.push(currentLine)
+
+      // 逐行布局
+      let currentY = y
+      for (const line of lines) {
+        this.layoutRow(line.children, line.sizes, x, currentY, width, line.lineHeight, justify, align, gap)
+        currentY += line.lineHeight + gap
+      }
+    } else {
+      // 垂直方向换行（换列）
+      const columns: { children: CanvasNode[]; sizes: { width: number; height: number }[]; colWidth: number }[] = []
+      let currentCol: { children: CanvasNode[]; sizes: { width: number; height: number }[]; colWidth: number } = { children: [], sizes: [], colWidth: 0 }
+      let currentHeight = 0
+
+      for (let i = 0; i < children.length; i++) {
+        const childWidth = sizes[i].width
+        const childHeight = sizes[i].height
+
+        if (currentCol.children.length > 0 && currentHeight + gap + childHeight > height) {
+          columns.push(currentCol)
+          currentCol = { children: [], sizes: [], colWidth: 0 }
+          currentHeight = 0
+        }
+
+        currentCol.children.push(children[i])
+        currentCol.sizes.push(sizes[i])
+        currentCol.colWidth = Math.max(currentCol.colWidth, childWidth)
+        currentHeight += (currentCol.children.length > 1 ? gap : 0) + childHeight
+      }
+      if (currentCol.children.length > 0) columns.push(currentCol)
+
+      // 逐列布局
+      let currentX = x
+      for (const col of columns) {
+        this.layoutColumn(col.children, col.sizes, currentX, y, col.colWidth, height, justify, align, gap)
+        currentX += col.colWidth + gap
+      }
+    }
+  }
+
+  /**
    * 测量节点的期望尺寸（递归）
    * 如果节点没有指定尺寸，则根据子节点内容自动计算
+   * 支持百分比尺寸和 auto 尺寸
    */
   private measureNode(node: CanvasNode, availableWidth: number, availableHeight: number): { width: number; height: number } {
     const style = node.getComputedStyle()
@@ -81,23 +158,31 @@ export class LayoutEngine {
     let width = style.width ?? 0
     let height = style.height ?? 0
 
-    // 文本节点 / 按钮节点：根据文本内容计算尺寸
+    // 百分比尺寸处理
+    if (style.widthPercent !== undefined) {
+      width = availableWidth * style.widthPercent
+    }
+    if (style.heightPercent !== undefined) {
+      height = availableHeight * style.heightPercent
+    }
+
+    // 文本节点 / 按钮节点：根据文本内容计算尺寸（auto 尺寸）
     if (node instanceof TextNode || node instanceof ButtonNode) {
       const text = node instanceof TextNode ? node.text : (node as ButtonNode).text
       const fontSize = style.fontSize || 14
       const textWidth = this.estimateTextWidth(text, fontSize, style.fontWeight)
-      if (!style.width) width = textWidth + pl + pr
-      if (!style.height) height = fontSize * 1.5 + pt + pb
+      if (!style.width && style.widthPercent === undefined) width = textWidth + pl + pr
+      if (!style.height && style.heightPercent === undefined) height = fontSize * 1.5 + pt + pb
       return { width, height }
     }
 
     // 容器节点：根据子节点计算自适应尺寸
-    if (style.width === undefined) {
+    if (style.width === undefined && style.widthPercent === undefined) {
       width = availableWidth
     }
 
     // 如果没有指定高度，需要根据子节点内容计算
-    if (style.height === undefined) {
+    if (style.height === undefined && style.heightPercent === undefined) {
       if (node.children.length === 0) {
         height = 40 // 无子节点的空容器默认高度
       } else {
@@ -155,6 +240,7 @@ export class LayoutEngine {
 
   /**
    * 水平方向布局（row）
+   * 支持 flex-grow / flex-shrink
    */
   private layoutRow(
     children: CanvasNode[],
@@ -163,9 +249,40 @@ export class LayoutEngine {
     width: number, height: number,
     justify: string, align: string, gap: number
   ): void {
-    const totalChildWidth = sizes.reduce((sum, s) => sum + s.width, 0)
     const totalGap = gap * (children.length - 1)
-    const freeSpace = width - totalChildWidth - totalGap
+    const totalChildWidth = sizes.reduce((sum, s) => sum + s.width, 0)
+    let freeSpace = width - totalChildWidth - totalGap
+
+    // flex-grow / flex-shrink 分配
+    const finalWidths = sizes.map(s => s.width)
+    if (freeSpace > 0) {
+      // 有剩余空间，按 flexGrow 分配
+      const totalGrow = children.reduce((sum, child) => sum + (child.style.flexGrow || 0), 0)
+      if (totalGrow > 0) {
+        for (let i = 0; i < children.length; i++) {
+          const grow = children[i].style.flexGrow || 0
+          if (grow > 0) {
+            finalWidths[i] += (grow / totalGrow) * freeSpace
+          }
+        }
+        freeSpace = 0
+      }
+    } else if (freeSpace < 0) {
+      // 空间不足，按 flexShrink 收缩
+      const totalShrink = children.reduce((sum, child, i) => {
+        return sum + (child.style.flexShrink ?? 1) * sizes[i].width
+      }, 0)
+      if (totalShrink > 0) {
+        const overflow = -freeSpace
+        for (let i = 0; i < children.length; i++) {
+          const shrink = children[i].style.flexShrink ?? 1
+          const shrinkRatio = (shrink * sizes[i].width) / totalShrink
+          finalWidths[i] -= shrinkRatio * overflow
+          finalWidths[i] = Math.max(0, finalWidths[i])
+        }
+        freeSpace = 0
+      }
+    }
 
     // 计算起始 x 位置
     let currentX = x
@@ -207,16 +324,17 @@ export class LayoutEngine {
       child.layout = {
         x: currentX,
         y: childY,
-        width: size.width,
+        width: finalWidths[i],
         height: childHeight
       }
 
-      currentX += size.width + gap + (justify === 'space-between' || justify === 'space-around' ? spaceBetween : 0)
+      currentX += finalWidths[i] + gap + (justify === 'space-between' || justify === 'space-around' ? spaceBetween : 0)
     }
   }
 
   /**
    * 垂直方向布局（column）
+   * 支持 flex-grow / flex-shrink
    */
   private layoutColumn(
     children: CanvasNode[],
@@ -225,9 +343,40 @@ export class LayoutEngine {
     width: number, height: number,
     justify: string, align: string, gap: number
   ): void {
-    const totalChildHeight = sizes.reduce((sum, s) => sum + s.height, 0)
     const totalGap = gap * (children.length - 1)
-    const freeSpace = height - totalChildHeight - totalGap
+    const totalChildHeight = sizes.reduce((sum, s) => sum + s.height, 0)
+    let freeSpace = height - totalChildHeight - totalGap
+
+    // flex-grow / flex-shrink 分配
+    const finalHeights = sizes.map(s => s.height)
+    if (freeSpace > 0) {
+      // 有剩余空间，按 flexGrow 分配
+      const totalGrow = children.reduce((sum, child) => sum + (child.style.flexGrow || 0), 0)
+      if (totalGrow > 0) {
+        for (let i = 0; i < children.length; i++) {
+          const grow = children[i].style.flexGrow || 0
+          if (grow > 0) {
+            finalHeights[i] += (grow / totalGrow) * freeSpace
+          }
+        }
+        freeSpace = 0
+      }
+    } else if (freeSpace < 0) {
+      // 空间不足，按 flexShrink 收缩
+      const totalShrink = children.reduce((sum, child, i) => {
+        return sum + (child.style.flexShrink ?? 1) * sizes[i].height
+      }, 0)
+      if (totalShrink > 0) {
+        const overflow = -freeSpace
+        for (let i = 0; i < children.length; i++) {
+          const shrink = children[i].style.flexShrink ?? 1
+          const shrinkRatio = (shrink * sizes[i].height) / totalShrink
+          finalHeights[i] -= shrinkRatio * overflow
+          finalHeights[i] = Math.max(0, finalHeights[i])
+        }
+        freeSpace = 0
+      }
+    }
 
     // 计算起始 y 位置
     let currentY = y
@@ -270,10 +419,10 @@ export class LayoutEngine {
         x: childX,
         y: currentY,
         width: childWidth,
-        height: size.height
+        height: finalHeights[i]
       }
 
-      currentY += size.height + gap + (justify === 'space-between' || justify === 'space-around' ? spaceBetween : 0)
+      currentY += finalHeights[i] + gap + (justify === 'space-between' || justify === 'space-around' ? spaceBetween : 0)
     }
   }
 }

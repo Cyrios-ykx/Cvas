@@ -1,4 +1,5 @@
 import { createApp, CanvasNode, TextNode, ButtonNode } from '../src'
+import { ref, computed, watchEffect } from '../src/reactivity'
 
 // ============================================================
 // Vuvas Demo
@@ -89,7 +90,9 @@ const btnAdd = new ButtonNode('+1', {
   borderRadius: 6,
   fontSize: 14,
   fontWeight: 'bold',
-  cursor: 'pointer'
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+  flexShrink: 0
 })
 btnAdd.hoverStyle = { background: '#369970' }
 
@@ -482,6 +485,278 @@ btnResetProgress.on('click', () => {
   app.scheduleRender()
 })
 
+// --- 嵌套布局 + 渐变 + 边框样式卡片 ---
+const nestedCard = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: [20, 24],
+  background: '#ffffff',
+  borderRadius: 12,
+  gap: 14,
+  shadowColor: 'rgba(0,0,0,0.08)',
+  shadowBlur: 12,
+  shadowOffsetY: 4
+})
+
+const nestedTitle = new TextNode('🎯 嵌套布局 + 渐变 + 边框', {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: '#333',
+  textAlign: 'left'
+})
+
+// 渐变背景展示行
+const gradientRow = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'row',
+  gap: 10,
+  height: 50,
+  alignItems: 'stretch'
+})
+
+const grad1 = new CanvasNode({
+  width: 100,
+  background: { type: 'linear', direction: 'to right', colors: ['#667eea', '#764ba2'] },
+  borderRadius: 8
+})
+
+const grad2 = new CanvasNode({
+  width: 100,
+  background: { type: 'linear', direction: 'to bottom', colors: ['#f093fb', '#f5576c'] },
+  borderRadius: 8
+})
+
+const grad3 = new CanvasNode({
+  width: 100,
+  background: { type: 'linear', direction: 'to right', colors: ['#4facfe', '#00f2fe'] },
+  borderRadius: 8
+})
+
+const grad4 = new CanvasNode({
+  width: 100,
+  background: { type: 'linear', direction: 'to right', colors: ['#43e97b', '#38f9d7'] },
+  borderRadius: 8
+})
+
+gradientRow.append(grad1, grad2, grad3, grad4)
+
+// 边框样式展示行
+const borderRow = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'row',
+  gap: 10,
+  height: 50,
+  alignItems: 'stretch'
+})
+
+const borderSolid = new CanvasNode({
+  width: 130,
+  borderColor: '#6366f1',
+  borderWidth: 2,
+  borderStyle: 'solid',
+  borderRadius: 8
+})
+
+const borderDashed = new CanvasNode({
+  width: 130,
+  borderColor: '#ec4899',
+  borderWidth: 2,
+  borderStyle: 'dashed',
+  borderRadius: 8
+})
+
+const borderDotted = new CanvasNode({
+  width: 130,
+  borderColor: '#f59e0b',
+  borderWidth: 2,
+  borderStyle: 'dotted',
+  borderRadius: 8
+})
+
+borderRow.append(borderSolid, borderDashed, borderDotted)
+
+// 嵌套布局展示
+const nestedLayout = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'row',
+  gap: 10,
+  height: 100
+})
+
+// 左侧面板
+const leftPanel = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'column',
+  width: 200,
+  padding: 10,
+  gap: 8,
+  background: { type: 'linear', direction: 'to bottom', colors: ['#e0e7ff', '#c7d2fe'] },
+  borderRadius: 8
+})
+
+const leftHeader = new TextNode('左侧面板', {
+  fontSize: 12,
+  fontWeight: 'bold',
+  color: '#4338ca',
+  textAlign: 'left'
+})
+
+const leftContent = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'row',
+  gap: 6,
+  height: 30,
+  alignItems: 'stretch'
+})
+
+for (let i = 0; i < 3; i++) {
+  leftContent.append(new CanvasNode({
+    width: 30,
+    background: '#6366f1',
+    borderRadius: 4
+  }))
+}
+
+leftPanel.append(leftHeader, leftContent)
+
+// 右侧面板
+const rightPanel = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'column',
+  width: 200,
+  padding: 10,
+  gap: 8,
+  background: { type: 'linear', direction: 'to bottom', colors: ['#fef3c7', '#fde68a'] },
+  borderRadius: 8
+})
+
+const rightHeader = new TextNode('右侧面板', {
+  fontSize: 12,
+  fontWeight: 'bold',
+  color: '#92400e',
+  textAlign: 'left'
+})
+
+const rightContent = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+  alignItems: 'stretch'
+})
+
+for (let i = 0; i < 3; i++) {
+  rightContent.append(new CanvasNode({
+    height: 14,
+    background: '#f59e0b',
+    borderRadius: 3
+  }))
+}
+
+rightPanel.append(rightHeader, rightContent)
+
+nestedLayout.append(leftPanel, rightPanel)
+nestedCard.append(nestedTitle, gradientRow, borderRow, nestedLayout)
+
+// --- 响应式系统展示卡片 ---
+const reactiveCard = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: [20, 24],
+  background: '#ffffff',
+  borderRadius: 12,
+  gap: 14,
+  shadowColor: 'rgba(0,0,0,0.08)',
+  shadowBlur: 12,
+  shadowOffsetY: 4
+})
+
+const reactiveTitle = new TextNode('⚡ 响应式系统 (ref + computed + watchEffect)', {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: '#333',
+  textAlign: 'left'
+})
+
+// 使用响应式数据驱动 UI
+const temperature = ref(20)
+const status = computed(() => {
+  const t = temperature.value
+  if (t < 0) return '❄️ 冰冻'
+  if (t < 15) return '🌬️ 寒冷'
+  if (t < 25) return '☀️ 舒适'
+  if (t < 35) return '🔥 炎热'
+  return '🌡️ 酷热'
+})
+
+const tempDisplay = new TextNode(`温度: ${temperature.value}°C — ${status.value}`, {
+  fontSize: 16,
+  color: '#6366f1',
+  fontWeight: 'bold',
+  textAlign: 'left'
+})
+
+// watchEffect: 温度变化时自动更新显示
+watchEffect(() => {
+  tempDisplay.text = `温度: ${temperature.value}°C — ${status.value}`
+  app.scheduleRender()
+})
+
+// 温度控制按钮
+const tempBtnRow = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'row',
+  gap: 10,
+  height: 36,
+  alignItems: 'center'
+})
+
+const btnTempUp = new ButtonNode('+5°C', {
+  padding: [6, 14],
+  background: '#ef4444',
+  color: '#fff',
+  borderRadius: 6,
+  fontSize: 13,
+  fontWeight: 'bold',
+  cursor: 'pointer'
+})
+btnTempUp.hoverStyle = { background: '#dc2626' }
+
+const btnTempDown = new ButtonNode('-5°C', {
+  padding: [6, 14],
+  background: '#3b82f6',
+  color: '#fff',
+  borderRadius: 6,
+  fontSize: 13,
+  fontWeight: 'bold',
+  cursor: 'pointer'
+})
+btnTempDown.hoverStyle = { background: '#2563eb' }
+
+const btnTempReset = new ButtonNode('20°C', {
+  padding: [6, 14],
+  background: '#8b5cf6',
+  color: '#fff',
+  borderRadius: 6,
+  fontSize: 13,
+  fontWeight: 'bold',
+  cursor: 'pointer'
+})
+btnTempReset.hoverStyle = { background: '#7c3aed' }
+
+btnTempUp.on('click', () => { temperature.value += 5 })
+btnTempDown.on('click', () => { temperature.value -= 5 })
+btnTempReset.on('click', () => { temperature.value = 20 })
+
+tempBtnRow.append(btnTempUp, btnTempDown, btnTempReset)
+
+const reactiveHint = new TextNode('↑ 点击按钮修改 ref 值，watchEffect 自动更新 UI', {
+  fontSize: 12,
+  color: '#999',
+  textAlign: 'left'
+})
+
+reactiveCard.append(reactiveTitle, tempDisplay, tempBtnRow, reactiveHint)
+
 // --- 交互提示卡片 ---
 const infoCard = new CanvasNode({
   display: 'flex',
@@ -503,7 +778,7 @@ const infoText = new TextNode('💡 试试点击按钮、Todo项、悬停在彩�
 infoCard.append(infoText)
 
 // --- 组装并挂载 ---
-root.append(header, counterCard, layoutCard, todoCard, progressCard, infoCard)
+root.append(header, counterCard, layoutCard, todoCard, progressCard, nestedCard, reactiveCard, infoCard)
 app.mount(root)
 
 console.log('✅ Vuvas Demo 已启动!')

@@ -52,13 +52,23 @@ export class EventManager {
    */
   private bindEvents(): void {
     this.canvas.addEventListener('click', (e) => this.handleEvent('click', e))
-    this.canvas.addEventListener('mousedown', (e) => this.handleEvent('mousedown', e))
-    this.canvas.addEventListener('mouseup', (e) => this.handleEvent('mouseup', e))
+    this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e))
+    this.canvas.addEventListener('mouseup', (e) => this.handleMouseUp(e))
     this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e))
     this.canvas.addEventListener('mouseleave', () => this.handleMouseLeave())
 
     // 滚轮事件
     this.canvas.addEventListener('wheel', (e) => this.handleWheel(e), { passive: false })
+
+    // 触摸事件
+    this.canvas.addEventListener('touchstart', (e) => this.handleTouch('click', e), { passive: false })
+    this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false })
+    this.canvas.addEventListener('touchend', () => this.handleTouchEnd())
+
+    // 键盘事件（需要 canvas 可聚焦）
+    this.canvas.setAttribute('tabindex', '0')
+    this.canvas.addEventListener('keydown', (e) => this.handleKeyboard('keydown', e))
+    this.canvas.addEventListener('keyup', (e) => this.handleKeyboard('keyup', e))
   }
 
   /**
@@ -67,6 +77,159 @@ export class EventManager {
   private handleWheel(e: WheelEvent): void {
     e.preventDefault()
     this.onScroll?.(e.deltaY)
+  }
+
+  // 触摸滚动相关状态
+  private lastTouchY: number = 0
+  private isTouching: boolean = false
+
+  /**
+   * 处理触摸开始（模拟点击）
+   */
+  private handleTouch(type: string, e: TouchEvent): void {
+    e.preventDefault()
+    if (!this.root || e.touches.length === 0) return
+    const touch = e.touches[0]
+    const { x, y } = this.getTouchPosition(touch)
+    this.lastTouchY = touch.clientY
+    this.isTouching = true
+
+    const target = this.hitTest(this.root, x, y + this.scrollY)
+    if (target) {
+      const event = this.createEvent(type, target, x, y + this.scrollY)
+      this.dispatchEvent(target, event)
+    }
+  }
+
+  /**
+   * 处理触摸移动（模拟滚动）
+   */
+  private handleTouchMove(e: TouchEvent): void {
+    e.preventDefault()
+    if (!this.isTouching || e.touches.length === 0) return
+    const touch = e.touches[0]
+    const deltaY = this.lastTouchY - touch.clientY
+    this.lastTouchY = touch.clientY
+    this.onScroll?.(deltaY)
+  }
+
+  /**
+   * 处理触摸结束
+   */
+  private handleTouchEnd(): void {
+    this.isTouching = false
+  }
+
+  // ============================================================
+  // 拖拽事件
+  // ============================================================
+
+  // 拖拽状态
+  private isDragging: boolean = false
+  private dragTarget: CanvasNode | null = null
+  private dragStartX: number = 0
+  private dragStartY: number = 0
+
+  /**
+   * 处理鼠标按下（拖拽开始检测）
+   */
+  private handleMouseDown(e: MouseEvent): void {
+    if (!this.root) return
+    const { x, y } = this.getCanvasPosition(e)
+    const target = this.hitTest(this.root, x, y + this.scrollY)
+
+    if (target) {
+      // 触发 mousedown 事件
+      const event = this.createEvent('mousedown', target, x, y + this.scrollY)
+      this.dispatchEvent(target, event)
+
+      // 记录拖拽起始信息
+      this.dragTarget = target
+      this.dragStartX = x
+      this.dragStartY = y
+    }
+  }
+
+  /**
+   * 处理鼠标释放（拖拽结束）
+   */
+  private handleMouseUp(e: MouseEvent): void {
+    if (!this.root) return
+    const { x, y } = this.getCanvasPosition(e)
+    const target = this.hitTest(this.root, x, y + this.scrollY)
+
+    // 触发 mouseup 事件
+    if (target) {
+      const event = this.createEvent('mouseup', target, x, y + this.scrollY)
+      this.dispatchEvent(target, event)
+    }
+
+    // 如果正在拖拽，触发 dragend
+    if (this.isDragging && this.dragTarget) {
+      const dragEndEvent = this.createEvent('dragend', this.dragTarget, x, y + this.scrollY)
+      this.dispatchEvent(this.dragTarget, dragEndEvent)
+      this.isDragging = false
+    }
+
+    // 如果正在拖拽并释放到另一个节点上，触发 drop
+    if (this.isDragging && target && target !== this.dragTarget) {
+      const dropEvent = this.createEvent('drop', target, x, y + this.scrollY)
+      this.dispatchEvent(target, dropEvent)
+    }
+
+    this.dragTarget = null
+  }
+
+  // ============================================================
+  // 键盘事件
+  // ============================================================
+
+  /** 当前获得焦点的节点 */
+  private focusedNode: CanvasNode | null = null
+
+  /**
+   * 设置焦点节点
+   */
+  setFocusedNode(node: CanvasNode | null): void {
+    this.focusedNode = node
+  }
+
+  /**
+   * 处理键盘事件
+   */
+  private handleKeyboard(type: string, e: KeyboardEvent): void {
+    // 创建键盘事件对象
+    const target = this.focusedNode || this.hoveredNode || this.root
+    if (!target) return
+
+    const event: any = {
+      type,
+      target,
+      x: 0,
+      y: 0,
+      key: e.key,
+      code: e.code,
+      ctrlKey: e.ctrlKey,
+      shiftKey: e.shiftKey,
+      altKey: e.altKey,
+      metaKey: e.metaKey,
+      _stopped: false,
+      stopPropagation() { this._stopped = true },
+      preventDefault() { e.preventDefault() }
+    }
+
+    this.dispatchEvent(target, event)
+  }
+
+  /**
+   * 获取触摸点在 Canvas 中的坐标
+   */
+  private getTouchPosition(touch: Touch): { x: number; y: number } {
+    const rect = this.canvas.getBoundingClientRect()
+    return {
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top
+    }
   }
 
   /**
@@ -85,11 +248,31 @@ export class EventManager {
   }
 
   /**
-   * 处理鼠标移动（hover 检测）
+   * 处理鼠标移动（hover 检测 + 拖拽检测）
    */
   private handleMouseMove(e: MouseEvent): void {
     if (!this.root) return
     const { x, y } = this.getCanvasPosition(e)
+
+    // 拖拽检测：鼠标按下并移动超过 5px 阈值
+    if (this.dragTarget && !this.isDragging) {
+      const dx = x - this.dragStartX
+      const dy = y - this.dragStartY
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+        this.isDragging = true
+        const dragStartEvent = this.createEvent('dragstart', this.dragTarget, x, y + this.scrollY)
+        this.dispatchEvent(this.dragTarget, dragStartEvent)
+      }
+    }
+
+    // 拖拽中：触发 drag 事件
+    if (this.isDragging && this.dragTarget) {
+      const dragEvent = this.createEvent('drag', this.dragTarget, x, y + this.scrollY)
+      this.dispatchEvent(this.dragTarget, dragEvent)
+      this.onNeedRender?.()
+      return // 拖拽中不处理 hover
+    }
+
     // 命中测试时加上滚动偏移
     const target = this.hitTest(this.root, x, y + this.scrollY)
 

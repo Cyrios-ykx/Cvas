@@ -17,25 +17,45 @@ export interface NodeStyle {
   flexDirection?: 'row' | 'column'
   justifyContent?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around'
   alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch'
+  flexWrap?: 'nowrap' | 'wrap'
   gap?: number
+  flexGrow?: number
+  flexShrink?: number
+
+  // 百分比尺寸（0~1 表示百分比，如 0.5 = 50%）
+  widthPercent?: number
+  heightPercent?: number
 
   // 外观
-  background?: string
+  background?: string | { type: 'linear'; direction?: 'to right' | 'to bottom' | 'to left' | 'to top'; colors: string[] }
   color?: string
   fontSize?: number
   fontWeight?: 'normal' | 'bold'
   fontFamily?: string
   textAlign?: 'left' | 'center' | 'right'
+  lineHeight?: number
+  maxLines?: number
+  textOverflow?: 'ellipsis' | 'clip'
+  whiteSpace?: 'normal' | 'nowrap'
   borderRadius?: number
   border?: string
   borderColor?: string
   borderWidth?: number
+  borderStyle?: 'solid' | 'dashed' | 'dotted'
 
   // 阴影
   shadowColor?: string
   shadowBlur?: number
   shadowOffsetX?: number
   shadowOffsetY?: number
+
+  // 动画
+  transition?: { property: string; duration: number; easing?: string }[]
+  opacity?: number
+
+  // 图片
+  src?: string
+  objectFit?: 'cover' | 'contain' | 'fill'
 
   // 定位辅助
   overflow?: 'visible' | 'hidden'
@@ -208,5 +228,55 @@ export class ButtonNode extends CanvasNode {
     this.text = text
     // 默认 hover 效果
     this.hoverStyle = { background: '#3aa876' }
+  }
+}
+
+/**
+ * 图片节点 - 在 Canvas 中绘制图片
+ */
+export class ImageNode extends CanvasNode {
+  type = 'image'
+  src: string
+  private _image: HTMLImageElement | null = null
+  private _loaded: boolean = false
+  private _onLoad: (() => void) | null = null
+
+  constructor(src: string, style?: NodeStyle) {
+    super(style)
+    this.src = src
+    this.loadImage()
+  }
+
+  /**
+   * 设置图片加载完成回调
+   */
+  onLoad(cb: () => void): this {
+    this._onLoad = cb
+    if (this._loaded) cb()
+    return this
+  }
+
+  /**
+   * 获取已加载的图片元素
+   */
+  getImage(): HTMLImageElement | null {
+    return this._loaded ? this._image : null
+  }
+
+  /**
+   * 加载图片
+   */
+  private loadImage(): void {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      this._image = img
+      this._loaded = true
+      this._onLoad?.()
+    }
+    img.onerror = () => {
+      console.warn(`[Vuvas] 图片加载失败: ${this.src}`)
+    }
+    img.src = this.src
   }
 }

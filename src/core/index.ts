@@ -3,7 +3,7 @@ import { LayoutEngine } from './layout'
 import { Renderer } from './renderer'
 import { EventManager } from './event'
 
-export { CanvasNode, TextNode, ButtonNode } from './node'
+export { CanvasNode, TextNode, ButtonNode, ImageNode } from './node'
 export type { NodeStyle, CanvasEvent, EventHandler } from './node'
 export { LayoutEngine } from './layout'
 export { Renderer } from './renderer'
