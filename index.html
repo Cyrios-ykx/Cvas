@@ -3,50 +3,214 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/png" href="/Vuvas.png" />
-  <title>Vuvas Demo</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <title>Vuvas — Canvas 上的 Vue</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
+
     body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29 0%, #1a1a2e 50%, #16213e 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      background: #1a1a2e;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      position: relative;
     }
-    h1 {
-      color: #e0e0e0;
+
+    /* 背景装饰 */
+    body::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 40%, rgba(66, 184, 131, 0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 60%, rgba(99, 102, 241, 0.06) 0%, transparent 50%);
+      animation: float 20s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(2%, -2%) rotate(1deg); }
+      66% { transform: translate(-1%, 1%) rotate(-0.5deg); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 40px;
+      max-width: 700px;
+    }
+
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 32px;
+      filter: drop-shadow(0 8px 32px rgba(66, 184, 131, 0.3));
+      animation: logoFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .title {
+      font-size: 56px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #42b883 0%, #64d4a0 50%, #42b883 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       margin-bottom: 16px;
-      font-size: 24px;
+      letter-spacing: -1px;
     }
+
     .subtitle {
-      color: #888;
-      margin-bottom: 24px;
-      font-size: 14px;
+      font-size: 20px;
+      color: #a0aec0;
+      margin-bottom: 12px;
+      font-weight: 400;
+      line-height: 1.6;
     }
-    canvas {
+
+    .description {
+      font-size: 15px;
+      color: #718096;
+      margin-bottom: 48px;
+      line-height: 1.8;
+      max-width: 520px;
+    }
+
+    .description code {
+      background: rgba(66, 184, 131, 0.15);
+      color: #42b883;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'Fira Code', 'JetBrains Mono', monospace;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
       border-radius: 12px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #42b883 0%, #35a070 100%);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(66, 184, 131, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(66, 184, 131, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: #a0aec0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .features {
+      display: flex;
+      gap: 32px;
+      margin-top: 64px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .feature {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .feature-icon {
+      font-size: 28px;
+    }
+
+    .feature-text {
+      font-size: 13px;
+      color: #718096;
+      font-weight: 500;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 24px;
+      color: #4a5568;
+      font-size: 12px;
+    }
+
+    .footer a {
+      color: #42b883;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <h1><img src="/Vuvas.png" alt="Vuvas" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 8px;">Vuvas Demo</h1>
-  <p class="subtitle">Canvas 上的 Vue — 零学习成本在 Canvas 中构建界面</p>
-  <canvas id="app" width="800" height="600"></canvas>
-  <p class="subtitle" style="margin-top: 12px; font-size: 12px;">🖱️ 使用鼠标滚轮滚动查看更多内容</p>
-  <p class="subtitle" style="margin-top: 8px; font-size: 12px;">
-    <a href="/sfc.html" style="color: #42b883; text-decoration: none;">📦 查看 SFC 预览 →</a>
-    <span style="margin: 0 8px; color: #555;">|</span>
-    <a href="/benchmarks/" style="color: #42b883; text-decoration: none;">⚡ 性能基准测试 →</a>
-    <span style="margin-left: 8px; color: #555;">createVuvasApp(App).mount('#app')</span>
-  </p>
-  <script type="module" src="/demo/main.ts"></script>
+  <div class="container">
+    <img src="/Vuvas-logo.png" alt="Vuvas" class="logo" />
+    <h1 class="title">Vuvas</h1>
+    <p class="subtitle">Canvas 上的 Vue — 零学习成本在 Canvas 中构建界面</p>
+    <p class="description">
+      响应式数据驱动 + 组件化 + Flexbox 布局 + 事件系统<br>
+      像写 Vue 一样写 Canvas UI，支持 <code>.vuvas</code> 单文件组件
+    </p>
+    <div class="btn-group">
+      <a href="/demo.html" class="btn btn-primary">
+        🚀 查看 Demo
+      </a>
+      <a href="https://github.com/Cyrios-ykx/Vuvas" target="_blank" class="btn btn-secondary">
+        ⭐ GitHub
+      </a>
+    </div>
+  </div>
+  <div class="footer">
+    Made with ❤️ by <a href="https://github.com/Cyrios-ykx" target="_blank">Cyrios</a>
+  </div>
 </body>
 </html>

@@ -76,6 +76,28 @@ export class Renderer {
   }
 
   /**
+   * 动态调整 canvas 尺寸（高度自适应内容）
+   */
+  resize(width: number, height: number): void {
+    if (this.width === width && this.height === height) return
+
+    this.width = width
+    this.height = height
+
+    const canvas = this.ctx.canvas
+    canvas.width = Math.round(width * this.dpr)
+    canvas.height = Math.round(height * this.dpr)
+    canvas.style.width = `${width}px`
+    canvas.style.height = `${height}px`
+
+    // 重置变换矩阵并应用 DPR 缩放
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
+
+    // 尺寸变化需要全量重绘
+    this.forceFullRender = true
+  }
+
+  /**
    * 标记脏区域（需要重绘的区域）
    */
   markDirty(x: number, y: number, width: number, height: number): void {
@@ -117,26 +139,34 @@ export class Renderer {
 
   /**
    * 智能重绘：遍历节点树，仅将 _visualDirty 的节点标记为脏区域
-   * 适用于只有视觉属性变更（颜色、透明度等）的场景
-   * 比 invalidateAll() 全量重绘更高效
+   * 优化：直接全量重绘，避免 clip() 裁剪导致父节点阴影截断产生伪影（如 hover 时出现 border-top 线条）
    */
   renderVisualChanges(root: CanvasNode): void {
-    this.collectDirtyNodes(root)
-    if (this.dirtyRects.length > 0) {
+    if (this.hasDirtyNodes(root)) {
+      this.clearDirtyFlags(root)
+      this.forceFullRender = true
       this.render(root)
     }
   }
 
   /**
-   * 递归收集视觉脏节点的区域
+   * 检查是否有视觉脏节点
    */
-  private collectDirtyNodes(node: CanvasNode): void {
-    if (node._visualDirty) {
-      this.markNodeDirty(node)
-      node._visualDirty = false
-    }
+  private hasDirtyNodes(node: CanvasNode): boolean {
+    if (node._visualDirty) return true
     for (const child of node.children) {
-      this.collectDirtyNodes(child)
+      if (this.hasDirtyNodes(child)) return true
+    }
+    return false
+  }
+
+  /**
+   * 清除所有视觉脏标记
+   */
+  private clearDirtyFlags(node: CanvasNode): void {
+    node._visualDirty = false
+    for (const child of node.children) {
+      this.clearDirtyFlags(child)
     }
   }
 

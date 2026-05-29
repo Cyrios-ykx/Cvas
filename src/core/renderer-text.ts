@@ -1,16 +1,15 @@
-/**
- * Canvas 渲染器 - 文本绘制模块
- * 负责文本的换行、截断和绘制
- */
-
 import { parseSpacing, type NodeStyle } from './node'
 
 /**
- * 绘制文本（支持换行）
+ * 绘制文本（支持换行、对齐、省略号等）
  */
 export function drawText(
   ctx: CanvasRenderingContext2D,
-  text: string, x: number, y: number, w: number, h: number,
+  text: string,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
   style: NodeStyle
 ): void {
   const fontSize = style.fontSize || 14
@@ -32,7 +31,7 @@ export function drawText(
   ctx.fillStyle = color
   ctx.textBaseline = 'top'
 
-  const [pt, pr, pb, pl] = parseSpacing(style.padding)
+  const [_pt, pr, _pb, pl] = parseSpacing(style.padding)
   const maxWidth = w - pl - pr
 
   // 计算文本 X 坐标
@@ -57,6 +56,7 @@ export function drawText(
     ctx.textBaseline = 'middle'
     const textY = y + h / 2
     let displayText = text
+    // 文本溢出处理
     if (ctx.measureText(text).width > maxWidth && textOverflow === 'ellipsis') {
       displayText = truncateText(ctx, text, maxWidth)
     }
@@ -71,6 +71,7 @@ export function drawText(
   let displayLines = lines
   if (maxLines > 0 && lines.length > maxLines) {
     displayLines = lines.slice(0, maxLines)
+    // 最后一行添加省略号
     if (textOverflow === 'ellipsis') {
       const lastLine = displayLines[displayLines.length - 1]
       displayLines[displayLines.length - 1] = truncateText(ctx, lastLine + '...', maxWidth)
@@ -97,8 +98,9 @@ export function drawText(
 /**
  * 文本换行：将文本按宽度拆分为多行
  */
-export function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const lines: string[] = []
+  // 先按换行符分割
   const paragraphs = text.split('\n')
 
   for (const paragraph of paragraphs) {
@@ -129,8 +131,9 @@ export function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: 
 /**
  * 截断文本并添加省略号
  */
-export function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
   const ellipsis = '...'
+  const ellipsisWidth = ctx.measureText(ellipsis).width
 
   if (ctx.measureText(text).width <= maxWidth) return text
 

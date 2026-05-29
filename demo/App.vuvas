@@ -33,6 +33,22 @@
         <text :style="todoTextStyle">{{ item.done ? '✅' : '⬜' }} {{ item.text }}</text>
       </view>
     </view>
+
+    <view :style="cardStyle">
+      <text :style="labelStyle">⚡ 响应式温度: {{ temperature }}°C</text>
+      <text :style="hintStyle">状态: {{ tempStatus }}</text>
+      <view :style="btnRow">
+        <view :style="btnStyle" @click="tempUp">
+          <text :style="btnTextStyle">+5°C</text>
+        </view>
+        <view :style="btnDangerStyle" @click="tempDown">
+          <text :style="btnTextStyle">-5°C</text>
+        </view>
+        <view :style="btnSecondaryStyle" @click="tempReset">
+          <text :style="btnTextStyle">20°C</text>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -53,6 +69,18 @@ const todos = ref([
   { id: 3, text: '发布 1.0 版本', done: false }
 ])
 
+// 响应式温度（与 main.ts 的响应式系统卡片对齐）
+const temperature = ref(20)
+
+const tempStatus = computed(() => {
+  const t = temperature.value
+  if (t < 0) return '❄️ 冰冻'
+  if (t < 15) return '🌬️ 寒冷'
+  if (t < 25) return '☀️ 舒适'
+  if (t < 35) return '🔥 炎热'
+  return '🌡️ 酷热'
+})
+
 function increment() {
   count.value++
 }
@@ -63,6 +91,18 @@ function decrement() {
 
 function reset() {
   count.value = 0
+}
+
+function tempUp() {
+  temperature.value += 5
+}
+
+function tempDown() {
+  temperature.value -= 5
+}
+
+function tempReset() {
+  temperature.value = 20
 }
 </script>
 

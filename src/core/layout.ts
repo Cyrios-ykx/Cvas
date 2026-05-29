@@ -1,4 +1,4 @@
-import { CanvasNode, TextNode, ButtonNode, parseSpacing } from './node'
+import { CanvasNode, TextNode, ButtonNode, parseSpacing, type LayoutBox } from './node'
 import { layoutRow, layoutColumn, layoutWrap } from './layout-flex'
 
 /**

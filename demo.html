@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <title>Vuvas Demo — 组件演示</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --sidebar-width: 240px;
+      --header-height: 56px;
+      --primary: #42b883;
+      --primary-hover: #35a070;
+      --bg-dark: #141414;
+      --bg-sidebar: #1a1a2e;
+      --bg-content: #0f1117;
+      --bg-card: #1e2030;
+      --border: rgba(255, 255, 255, 0.06);
+      --text-primary: #e2e8f0;
+      --text-secondary: #a0aec0;
+      --text-muted: #718096;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg-content);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部导航栏 */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      background: rgba(20, 20, 20, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      z-index: 100;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .header-logo img {
+      width: 28px;
+      height: 28px;
+    }
+
+    .header-nav {
+      margin-left: auto;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .header-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .header-nav a:hover {
+      color: var(--primary);
+    }
+
+    /* 布局容器 */
+    .layout {
+      display: flex;
+      margin-top: var(--header-height);
+      min-height: calc(100vh - var(--header-height));
+    }
+
+    /* 左侧导航 */
+    .sidebar {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-width);
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      padding: 0 20px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-item {
+      display: block;
+      padding: 8px 20px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-item:hover {
+      color: var(--text-primary);
+      background: rgba(66, 184, 131, 0.05);
+    }
+
+    .sidebar-item.active {
+      color: var(--primary);
+      background: rgba(66, 184, 131, 0.08);
+      border-left-color: var(--primary);
+      font-weight: 500;
+    }
+
+    /* 主内容区 */
+    .main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 40px;
+      max-width: 1000px;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .page-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    /* Demo 卡片 */
+    .demo-section {
+      margin-bottom: 48px;
+    }
+
+    .demo-section-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .demo-section-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .demo-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg-card);
+    }
+
+    .demo-preview {
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .demo-preview canvas {
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .demo-footer {
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .demo-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: rgba(66, 184, 131, 0.1);
+      color: var(--primary);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .demo-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* 页面切换 - 隐藏非活跃页面 */
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .main {
+        margin-left: 0;
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <header class="header">
+    <a href="/" class="header-logo">
+      <img src="/Vuvas-logo.png" alt="Vuvas" />
+      <span>Vuvas</span>
+    </a>
+    <nav class="header-nav">
+      <a href="/demo.html">Demo</a>
+      <a href="/benchmarks/">性能测试</a>
+      <a href="https://github.com/Cyrios-ykx/Vuvas" target="_blank">GitHub</a>
+    </nav>
+  </header>
+
+  <!-- 布局 -->
+  <div class="layout">
+    <!-- 左侧导航 -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">命令式 API</div>
+        <a href="#imperative" class="sidebar-item active" data-page="imperative">综合演示</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">SFC 组件</div>
+        <a href="#sfc" class="sidebar-item" data-page="sfc">.vuvas 单文件组件</a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">功能特性</div>
+        <a href="#reactivity" class="sidebar-item" data-page="reactivity">响应式系统</a>
+        <a href="#layout" class="sidebar-item" data-page="layout">Flexbox 布局</a>
+        <a href="#events" class="sidebar-item" data-page="events">事件系统</a>
+        <a href="#animation" class="sidebar-item" data-page="animation">动画</a>
+      </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main">
+      <!-- 命令式 API 综合演示 -->
+      <div class="page active" id="page-imperative">
+        <h1 class="page-title">综合演示</h1>
+        <p class="page-desc">
+          使用命令式 API 构建的完整 Canvas UI 演示，包含计数器、Todo 列表、布局、动画、响应式系统等功能。
+        </p>
+        <div class="demo-section">
+          <h2 class="demo-section-title">🎨 命令式 API — 全功能展示</h2>
+          <p class="demo-section-desc">
+            通过 <code>createApp</code>、<code>CanvasNode</code>、<code>TextNode</code>、<code>ButtonNode</code> 等 API 直接构建 Canvas UI。
+            支持 Flexbox 布局、事件绑定、hover 效果、响应式数据等。
+          </p>
+          <div class="demo-card">
+            <div class="demo-preview">
+              <canvas id="canvas-imperative" width="800" height="100"></canvas>
+            </div>
+            <div class="demo-footer">
+              <span class="demo-tag">📦 Imperative API</span>
+              <span class="demo-hint">🖱️ 点击按钮交互 · 悬停查看效果</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SFC 组件演示 -->
+      <div class="page" id="page-sfc">
+        <h1 class="page-title">.vuvas 单文件组件</h1>
+        <p class="page-desc">
+          像写 Vue 一样写 Canvas 组件。支持 <code>&lt;template&gt;</code>、<code>&lt;script setup&gt;</code>、<code>&lt;style&gt;</code> 三段式结构，
+          内置 <code>v-if</code>、<code>v-for</code>、<code>@click</code> 等模板语法。
+        </p>
+        <div class="demo-section">
+          <h2 class="demo-section-title">📦 SFC 组件 — 声明式 UI</h2>
+          <p class="demo-section-desc">
+            通过 <code>createVuvasApp(App).mount('#app')</code> 挂载 .vuvas 组件，
+            享受 Vue 风格的开发体验。
+          </p>
+          <div class="demo-card">
+            <div class="demo-preview">
+              <canvas id="canvas-sfc" width="800" height="100"></canvas>
+            </div>
+            <div class="demo-footer">
+              <span class="demo-tag">📄 .vuvas SFC</span>
+              <span class="demo-hint">🖱️ 点击按钮交互</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 响应式系统 -->
+      <div class="page" id="page-reactivity">
+        <h1 class="page-title">响应式系统</h1>
+        <p class="page-desc">
+          基于 Proxy 的响应式系统，支持 <code>ref</code>、<code>computed</code>、<code>watchEffect</code>，
+          数据变化自动触发 UI 更新。
+        </p>
+        <div class="demo-section">
+          <h2 class="demo-section-title">⚡ ref + computed + watchEffect</h2>
+          <p class="demo-section-desc">
+            修改 ref 值后，computed 自动重新计算，watchEffect 自动执行副作用更新 Canvas UI。
+          </p>
+          <div class="demo-card">
+            <div class="demo-preview">
+              <canvas id="canvas-reactivity" width="800" height="100"></canvas>
+            </div>
+            <div class="demo-footer">
+              <span class="demo-tag">⚡ Reactivity</span>
+              <span class="demo-hint">点击按钮修改温度，观察自动更新</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flexbox 布局 -->
+      <div class="page" id="page-layout">
+        <h1 class="page-title">Flexbox 布局</h1>
+        <p class="page-desc">
+          完整的 Flexbox 布局引擎，支持 <code>flexDirection</code>、<code>justifyContent</code>、<code>alignItems</code>、<code>gap</code>、<code>flexGrow</code> 等属性。
+        </p>
+        <div class="demo-section">
+          <h2 class="demo-section-title">📐 布局演示</h2>
+          <p class="demo-section-desc">
+            展示 row/column 方向、对齐方式、嵌套布局、渐变背景、边框样式等。
+          </p>
+          <div class="demo-card">
+            <div class="demo-preview">
+              <canvas id="canvas-layout" width="800" height="100"></canvas>
+            </div>
+            <div class="demo-footer">
+              <span class="demo-tag">📐 Flexbox</span>
+              <span class="demo-hint">悬停在彩色方块上查看 hover 效果</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 事件系统 -->
+      <div class="page" id="page-events">
+        <h1 class="page-title">事件系统</h1>
+        <p class="page-desc">
+          支持 <code>click</code>、<code>hover</code>、<code>mousedown</code>、<code>mouseup</code> 等事件，
+          精确的命中检测 + 事件冒泡机制。
+        </p>
+        <div class="demo-section">
+          <h2 class="demo-section-title">🎯 事件交互</h2>
+          <p class="demo-section-desc">
+            计数器按钮点击、Todo 项切换、hover 样式变化等交互效果。
+          </p>
+          <div class="demo-card">
+            <div class="demo-preview">
+              <canvas id="canvas-events" width="800" height="100"></canvas>
+            </div>
+            <div class="demo-footer">
+              <span class="demo-tag">🎯 Events</span>
+              <span class="demo-hint">点击按钮和 Todo 项体验交互</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 动画 -->
+      <div class="page" id="page-animation">
+        <h1 class="page-title">动画</h1>
+        <p class="page-desc">
+          基于 <code>requestAnimationFrame</code> 的动画系统，支持进度条、过渡效果等。
+        </p>
+        <div class="demo-section">
+          <h2 class="demo-section-title">🚀 动画进度条</h2>
+          <p class="demo-section-desc">
+            点击"开始"按钮启动动画，支持暂停和重置。
+          </p>
+          <div class="demo-card">
+            <div class="demo-preview">
+              <canvas id="canvas-animation" width="800" height="100"></canvas>
+            </div>
+            <div class="demo-footer">
+              <span class="demo-tag">🚀 Animation</span>
+              <span class="demo-hint">点击开始/暂停/重置控制动画</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 导航切换脚本 -->
+  <script>
+    // 侧边栏导航切换
+    const sidebarItems = document.querySelectorAll('.sidebar-item')
+    const pages = document.querySelectorAll('.page')
+
+    function switchPage(pageName) {
+      // 更新侧边栏高亮
+      sidebarItems.forEach(item => {
+        item.classList.toggle('active', item.dataset.page === pageName)
+      })
+      // 切换页面
+      pages.forEach(page => {
+        page.classList.toggle('active', page.id === `page-${pageName}`)
+      })
+    }
+
+    sidebarItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault()
+        const pageName = item.dataset.page
+        switchPage(pageName)
+        history.replaceState(null, '', `#${pageName}`)
+      })
+    })
+
+    // 根据 URL hash 初始化页面
+    const hash = window.location.hash.slice(1)
+    if (hash && document.getElementById(`page-${hash}`)) {
+      switchPage(hash)
+    }
+  </script>
+
+  <!-- Demo 脚本入口 -->
+  <script type="module" src="/demo/demo-pages.ts"></script>
+</body>
+</html>

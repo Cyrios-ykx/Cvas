@@ -1,10 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <!-- V字渐变：从绿色到蓝色 -->
+    <linearGradient id="vGradientLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="50%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <!-- 画笔杆渐变 -->
+    <linearGradient id="brushHandleLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
   <!-- 文件外框 -->
-  <path d="M6 2h14l8 8v20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#f7fafc" stroke="#cbd5e0" stroke-width="0.5"/>
+  <path d="M6 2h14l8 8v20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.5"/>
   <!-- 折角 -->
   <path d="M20 2v6a2 2 0 0 0 2 2h6" fill="#e2e8f0"/>
-  <!-- Vuvas 标志 V -->
-  <path d="M10 14l6 12l6-12" stroke="#42b883" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  <!-- 内部小 V -->
-  <path d="M13 14l3 6l3-6" stroke="#35495e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- V字左笔画 -->
+  <path d="M8 12c0.5-0.5 1.5-0.3 1.8 0.5l4.2 10" stroke="url(#vGradientLight)" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <!-- V字右笔画（画笔形状） -->
+  <path d="M14 22.5l5.5-11.5c0.4-0.8 1.2-1.2 1.8-0.8" stroke="url(#vGradientLight)" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <!-- 画笔笔尖 -->
+  <ellipse cx="22" cy="24" rx="1.2" ry="1.8" fill="#1e293b" stroke="#334155" stroke-width="0.5" transform="rotate(-35 22 24)"/>
+  <!-- 画笔杆 -->
+  <line x1="22.5" y1="22.5" x2="25.5" y2="19" stroke="url(#brushHandleLight)" stroke-width="1.8" stroke-linecap="round"/>
 </svg>

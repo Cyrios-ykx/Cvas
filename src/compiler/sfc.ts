@@ -338,17 +338,91 @@ export function compileSFC(source: string, filename?: string, options?: { source
 function extractDeclaredNames(scriptBody: string): string[] {
   const names: string[] = []
 
-  // 匹配 const/let/var 声明
-  const varRegex = /(?:const|let|var)\s+(\w+)/g
-  let match: RegExpExecArray | null
-  while ((match = varRegex.exec(scriptBody)) !== null) {
-    names.push(match[1])
+  // 只提取顶层声明的变量（不提取嵌套在函数/箭头函数/computed 内部的局部变量）
+  // 通过追踪花括号/圆括号深度来判断是否在顶层
+  const lines = scriptBody.split('\n')
+  let depth = 0
+
+  for (const line of lines) {
+    // 计算该行之前的深度变化
+    for (const ch of line) {
+      if (ch === '{' || ch === '(') depth++
+      else if (ch === '}' || ch === ')') depth--
+    }
+
+    // 只在顶层（depth <= 0 或该行开始时 depth 为 0）提取声明
+    // 重新计算：逐字符扫描该行，在扫描到声明关键字时检查当前深度
+    // 简化方案：只匹配行首（可能有空格）的声明
+    if (depth <= 0 || line.match(/^(?:const|let|var|function)\s/)) {
+      // 此行可能是顶层声明
+    }
   }
 
-  // 匹配 function 声明
-  const funcRegex = /function\s+(\w+)/g
-  while ((match = funcRegex.exec(scriptBody)) !== null) {
-    names.push(match[1])
+  // 更精确的实现：逐字符追踪深度
+  names.length = 0
+  let braceDepth = 0
+  let parenDepth = 0
+  let i = 0
+  const src = scriptBody
+
+  while (i < src.length) {
+    const ch = src[i]
+
+    // 跳过字符串
+    if (ch === '"' || ch === "'" || ch === '`') {
+      const quote = ch
+      i++
+      while (i < src.length) {
+        if (src[i] === '\\') { i += 2; continue }
+        if (src[i] === quote) { i++; break }
+        if (quote === '`' && src[i] === '$' && src[i + 1] === '{') {
+          // 模板字符串中的表达式，简单跳过
+        }
+        i++
+      }
+      continue
+    }
+
+    // 跳过单行注释
+    if (ch === '/' && src[i + 1] === '/') {
+      while (i < src.length && src[i] !== '\n') i++
+      continue
+    }
+
+    // 跳过多行注释
+    if (ch === '/' && src[i + 1] === '*') {
+      i += 2
+      while (i < src.length && !(src[i] === '*' && src[i + 1] === '/')) i++
+      i += 2
+      continue
+    }
+
+    // 追踪深度
+    if (ch === '{') { braceDepth++; i++; continue }
+    if (ch === '}') { braceDepth--; i++; continue }
+    if (ch === '(') { parenDepth++; i++; continue }
+    if (ch === ')') { parenDepth--; i++; continue }
+
+    // 只在顶层（braceDepth === 0 且 parenDepth === 0）匹配声明
+    if (braceDepth === 0 && parenDepth === 0) {
+      // 匹配 const/let/var 声明
+      const varMatch = src.slice(i).match(/^(?:const|let|var)\s+(\w+)/)
+      if (varMatch) {
+        names.push(varMatch[1])
+        i += varMatch[0].length
+        continue
+      }
+
+      // 匹配 function 声明
+      const funcMatch = src.slice(i).match(/^function\s+(\w+)/)
+      if (funcMatch) {
+        names.push(funcMatch[1])
+        i += funcMatch[0].length
+        continue
+      }
+    }
+
+    i++
   }
 
   return names

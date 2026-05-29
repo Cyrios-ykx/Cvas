@@ -5,7 +5,7 @@
 [English](./README.md) | **中文**
 
 <p align="center">
-  <img src="./public/Vuvas.png" alt="Vuvas Logo" width="180" />
+  <img src="./public/Vuvas-transparent.png" alt="Vuvas Logo" width="180" />
 </p>
 
 <p align="center">

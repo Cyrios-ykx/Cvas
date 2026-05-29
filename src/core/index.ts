@@ -93,9 +93,20 @@ export class App {
     const layoutChanged = this.layout.computeLayoutIfNeeded(this.root, width, height)
 
     if (layoutChanged) {
-      // 布局变了，更新滚动范围
+      // 布局变了，获取内容实际高度
       const contentHeight = this.root.layout.height
-      this.maxScrollY = Math.max(0, contentHeight - height)
+
+      // 自动调整 canvas 高度适配内容（不需要滚动时缩小，需要更多空间时扩大）
+      if (contentHeight !== height) {
+        this.renderer.resize(width, contentHeight)
+        // 内容完全适配，不需要滚动
+        this.maxScrollY = 0
+        this.scrollY = 0
+        this.renderer.scrollY = 0
+        this.events.setScrollY(0)
+      } else {
+        this.maxScrollY = 0
+      }
 
       // 确保当前滚动位置不超出范围
       if (this.scrollY > this.maxScrollY) {
