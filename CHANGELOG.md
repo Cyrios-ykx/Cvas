@@ -7,6 +7,25 @@
 
 ---
 
+## [1.1.0] - 2026-05-29
+
+### 新增
+
+- ✨ **Source Map 支持**（`src/compiler/sourcemap.ts`）
+  - 完整的 VLQ（Variable-Length Quantity）编码实现
+  - `SourceMapBuilder` 增量构建器（逐行添加映射）
+  - 符合 Source Map v3 规范输出
+  - `generateSFCSourceMap()` 为 .vuvas 文件生成映射
+  - 支持内联 Source Map（data URL 格式）
+  - Vite 插件自动生成并传递 Source Map
+- ✨ **SFC 模板编译 Demo 卡片**
+  - 展示 .vuvas 文件的实时编译结果
+  - 显示 SFC 源码预览（代码高亮风格）
+  - 展示模板 → 渲染函数的编译产物
+  - 显示 Source Map 生成状态和元信息
+
+---
+
 ## [1.0.0] - 2026-05-29
 
 ### 新增

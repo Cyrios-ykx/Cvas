@@ -757,6 +757,149 @@ const reactiveHint = new TextNode('↑ 点击按钮修改 ref 值，watchEffect 
 
 reactiveCard.append(reactiveTitle, tempDisplay, tempBtnRow, reactiveHint)
 
+// --- SFC 模板编译展示卡片 ---
+const sfcCard = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: [20, 24],
+  background: '#ffffff',
+  borderRadius: 12,
+  gap: 14,
+  shadowColor: 'rgba(0,0,0,0.08)',
+  shadowBlur: 12,
+  shadowOffsetY: 4
+})
+
+const sfcTitle = new TextNode('📄 .vuvas 单文件组件 (SFC)', {
+  fontSize: 18,
+  fontWeight: 'bold',
+  color: '#333',
+  textAlign: 'left'
+})
+
+// 展示 SFC 编译能力
+import { compile } from '../src/compiler'
+import { compileSFC } from '../src/compiler/sfc'
+
+// 模拟一个 .vuvas 文件的编译
+const sfcSource = `<template>
+  <view :style="containerStyle">
+    <text>{{ greeting }}</text>
+    <button @click="toggle">切换</button>
+  </view>
+</template>
+
+<script setup>
+import { ref, computed } from 'vuvas'
+const visible = ref(true)
+const greeting = computed(() => visible.value ? 'Hello Vuvas!' : 'Goodbye!')
+const toggle = () => { visible.value = !visible.value }
+</script>
+
+<style scoped>
+view { background-color: #f0f9ff; padding: 16; border-radius: 8; }
+text { font-size: 16; color: #0369a1; }
+</style>`
+
+// 编译 SFC
+const sfcResult = compileSFC(sfcSource, 'Demo.vuvas', { sourceMap: true })
+
+// 展示编译状态
+const sfcStatus = new TextNode(`✅ 编译成功 | Source Map: ${sfcResult.map ? '已生成' : '无'}`, {
+  fontSize: 14,
+  color: '#16a34a',
+  fontWeight: 'bold',
+  textAlign: 'left'
+})
+
+// 展示 SFC 源码预览
+const sfcPreviewLabel = new TextNode('源码预览 (.vuvas):', {
+  fontSize: 12,
+  color: '#666',
+  textAlign: 'left'
+})
+
+const sfcPreviewBox = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: [12, 14],
+  background: '#1e293b',
+  borderRadius: 8,
+  gap: 2
+})
+
+// 显示 SFC 源码的前几行
+const previewLines = sfcSource.split('\n').slice(0, 6)
+for (const line of previewLines) {
+  sfcPreviewBox.append(new TextNode(line || ' ', {
+    fontSize: 11,
+    color: '#e2e8f0',
+    fontFamily: 'Consolas, Monaco, monospace',
+    textAlign: 'left',
+    whiteSpace: 'nowrap'
+  }))
+}
+sfcPreviewBox.append(new TextNode('  ...', {
+  fontSize: 11,
+  color: '#64748b',
+  fontFamily: 'Consolas, Monaco, monospace',
+  textAlign: 'left'
+}))
+
+// 模板编译演示
+const templateCompileLabel = new TextNode('模板编译 → 渲染函数:', {
+  fontSize: 12,
+  color: '#666',
+  textAlign: 'left'
+})
+
+const { code: templateCode } = compile(`<view :style="style">
+  <text v-if="show">{{ msg }}</text>
+  <text v-for="item in list" :key="item.id">{{ item.name }}</text>
+</view>`)
+
+const templateResultBox = new CanvasNode({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: [12, 14],
+  background: '#fefce8',
+  borderRadius: 8,
+  borderColor: '#fbbf24',
+  borderWidth: 1,
+  borderStyle: 'dashed',
+  gap: 2
+})
+
+// 显示编译结果的前几行
+const resultLines = templateCode.split('\n').slice(0, 5)
+for (const line of resultLines) {
+  templateResultBox.append(new TextNode(line || ' ', {
+    fontSize: 11,
+    color: '#713f12',
+    fontFamily: 'Consolas, Monaco, monospace',
+    textAlign: 'left',
+    whiteSpace: 'nowrap'
+  }))
+}
+templateResultBox.append(new TextNode('  ...', {
+  fontSize: 11,
+  color: '#a16207',
+  fontFamily: 'Consolas, Monaco, monospace',
+  textAlign: 'left'
+}))
+
+// Source Map 信息
+const smInfo = sfcResult.map
+  ? `sources: [${sfcResult.map.sources.join(', ')}] | mappings: ${sfcResult.map.mappings.length} chars`
+  : '未生成'
+const sfcMapInfo = new TextNode(`🗺️ Source Map: ${smInfo}`, {
+  fontSize: 11,
+  color: '#6366f1',
+  textAlign: 'left'
+})
+
+sfcCard.append(sfcTitle, sfcStatus, sfcPreviewLabel, sfcPreviewBox, templateCompileLabel, templateResultBox, sfcMapInfo)
+
 // --- 交互提示卡片 ---
 const infoCard = new CanvasNode({
   display: 'flex',
@@ -778,7 +921,7 @@ const infoText = new TextNode('💡 试试点击按钮、Todo项、悬停在彩�
 infoCard.append(infoText)
 
 // --- 组装并挂载 ---
-root.append(header, counterCard, layoutCard, todoCard, progressCard, nestedCard, reactiveCard, infoCard)
+root.append(header, counterCard, layoutCard, todoCard, progressCard, nestedCard, reactiveCard, sfcCard, infoCard)
 app.mount(root)
 
 console.log('✅ Vuvas Demo 已启动!')

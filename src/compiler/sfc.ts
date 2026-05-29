@@ -22,6 +22,8 @@
  * ```
  */
 
+import { generateSFCSourceMap, type RawSourceMap } from './sourcemap'
+
 // ============================================================
 // SFC 描述符
 // ============================================================
@@ -211,6 +213,8 @@ export interface SFCCompileResult {
   code: string
   /** 解析后的描述符 */
   descriptor: SFCDescriptor
+  /** Source Map */
+  map: RawSourceMap | null
 }
 
 /**
@@ -228,8 +232,9 @@ export interface SFCCompileResult {
  * })
  * ```
  */
-export function compileSFC(source: string, filename?: string): SFCCompileResult {
+export function compileSFC(source: string, filename?: string, options?: { sourceMap?: boolean }): SFCCompileResult {
   const descriptor = parseSFC(source, filename)
+  const enableSourceMap = options?.sourceMap !== false
 
   let code = ''
 
@@ -282,7 +287,23 @@ export function compileSFC(source: string, filename?: string): SFCCompileResult 
     code += '\n' + styleCode
   }
 
-  return { code, descriptor }
+  // 生成 Source Map
+  let map: RawSourceMap | null = null
+  if (enableSourceMap && filename) {
+    try {
+      map = generateSFCSourceMap(
+        filename,
+        source,
+        code,
+        descriptor.script?.loc,
+        descriptor.template?.loc
+      )
+    } catch {
+      // Source Map 生成失败不影响编译
+    }
+  }
+
+  return { code, descriptor, map }
 }
 
 /**

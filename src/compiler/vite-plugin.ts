@@ -60,17 +60,17 @@ export function vuvasPlugin(options: VuvasPluginOptions = {}): any {
       if (!fileRegex.test(id)) return null
 
       try {
-        const { code: compiledCode, descriptor } = compileSFC(code, id)
+        const { code: compiledCode, map } = compileSFC(code, id, { sourceMap: true })
 
         // 添加 HMR 支持代码
         let output = compiledCode
         if (hmr) {
-          output += generateHMRCode(id, descriptor)
+          output += generateHMRCode(id, null)
         }
 
         return {
           code: output,
-          map: null // TODO: 生成 source map
+          map: map || null
         }
       } catch (e: any) {
         this.error(`[vite-plugin-vuvas] 编译失败: ${id}\n${e.message}`)

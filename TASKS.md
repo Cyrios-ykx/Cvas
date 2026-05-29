@@ -104,7 +104,7 @@
 - [x] `<style scoped>` 样式块（CSS → 样式对象）
 - [x] Vite 插件（vite-plugin-vuvas）
 - [x] HMR 热更新（基础支持）
-- [ ] Source Map
+- [x] Source Map（VLQ 编码 + Source Map v3 规范）
 
 ### 扩展功能
 - [x] 动画系统（transition / animate + 缓动函数）

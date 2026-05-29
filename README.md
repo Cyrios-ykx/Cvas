@@ -1,12 +1,12 @@
-<p align="center">
-  <img src="./public/Vuvas.png" alt="Vuvas Logo" width="180" />
-</p>
-
 # Vuvas
 
 > /vjuːvæs/ — **V**(ue) + Canvas
 
 **English** | [中文](./README.zh-CN.md)
+
+<p align="center">
+  <img src="./public/Vuvas.png" alt="Vuvas Logo" width="180" />
+</p>
 
 <p align="center">
   <strong>Vue on Canvas</strong> — A progressive UI framework for Canvas
@@ -28,9 +28,17 @@
 
 - 🎨 **Vue-like DX** — Reactive data, components, template syntax. If you know Vue, you know Vuvas.
 - 📐 **Flexbox Layout** — Layout like CSS, no manual coordinate calculations.
-- ⚡ **Event System** — Click, hover, bubbling — just like DOM events.
+- ⚡ **Event System** — Click, hover, drag, keyboard, touch — full DOM-like event bubbling.
 - 🖼️ **Canvas Rendering** — Cross-platform consistency, image export, high-performance custom drawing.
 - 📦 **Progressive** — From simple imperative API to full framework, use what you need.
+- 🔄 **Reactivity** — `ref`, `reactive`, `computed`, `watch` — same as Vue 3.
+- 🧩 **Component System** — `defineComponent`, `setup()`, props, emit, slots, provide/inject.
+- 📝 **Template Compiler** — `{{ }}`, `v-if`, `v-for`, `v-model`, `@event`, `:prop`, `v-show`.
+- 📄 **Single File Component** — `.vuvas` SFC with `<template>`, `<script setup>`, `<style scoped>`.
+- 🎬 **Animation** — Transition & animate with easing functions.
+- 🗺️ **Router** — Hash/history mode, dynamic params, navigation guards.
+- 🏪 **Store** — Pinia-like state management with `defineStore`, `$patch`, `$subscribe`.
+- 🔧 **Vite Plugin** — `vite-plugin-vuvas` with HMR & Source Map support.
 
 ## 🚀 Quick Start
 
@@ -49,6 +57,8 @@ npm run dev
 Open `http://localhost:3000` in your browser to see the Demo.
 
 ## 📖 Example
+
+### Imperative API
 
 ```typescript
 import { createApp, CanvasNode, TextNode, ButtonNode } from 'vuvas'
@@ -85,13 +95,44 @@ container.append(title, btn)
 app.mount(container)
 ```
 
+### Single File Component (.vuvas)
+
+```html
+<template>
+  <view :style="{ flexDirection: 'column', padding: 20, gap: 10 }">
+    <text :style="{ fontSize: 24, color: '#333' }">Count: {{ count }}</text>
+    <view
+      @click="increment"
+      :style="{ padding: [8, 16], background: '#42b883', borderRadius: 6 }"
+    >
+      <text :style="{ color: '#fff' }">+1</text>
+    </view>
+  </view>
+</template>
+
+<script setup>
+import { ref } from 'vuvas'
+
+const count = ref(0)
+function increment() {
+  count.value++
+}
+</script>
+
+<style scoped>
+view {
+  background: #ffffff;
+}
+</style>
+```
+
 ## 🗺️ Roadmap
 
 | Phase | Content | Status |
 |-------|---------|--------|
-| **Phase 1** | Core Engine (Renderer + Layout + Events) + Demo | ✅ In Progress |
-| **Phase 2** | Reactive Framework (ref/reactive + VNode + Component System) | 🔲 Planned |
-| **Phase 3** | Template Compiler + SFC + Vite Plugin | 🔲 Planned |
+| **Phase 1** | Core Engine (Renderer + Layout + Events) + Demo | ✅ Done |
+| **Phase 2** | Reactive Framework (ref/reactive + VNode + Component System) | ✅ Done |
+| **Phase 3** | Template Compiler + SFC + Ecosystem | ✅ In Progress |
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) and [TASKS.md](./TASKS.md) for details.
 
@@ -99,18 +140,38 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) and [TASKS.md](./TASKS.md) for details.
 
 ```
 vuvas/
-├── src/core/         # Core engine
-│   ├── node.ts       # Node definitions (styles, events)
-│   ├── layout.ts     # Flexbox layout engine
-│   ├── renderer.ts   # Canvas renderer
-│   ├── event.ts      # Event system (hit-testing + bubbling)
-│   └── index.ts      # Entry + App class
-├── demo/             # Demo page
-│   └── main.ts       # Demo entry
-├── ARCHITECTURE.md   # Architecture design
-├── TASKS.md          # Task tracking
-├── CONTRIBUTING.md   # Contributing guide
-└── CHANGELOG.md      # Changelog
+├── src/
+│   ├── core/             # Core engine
+│   │   ├── node.ts       # Node definitions (styles, events)
+│   │   ├── layout.ts     # Flexbox layout engine
+│   │   ├── renderer.ts   # Canvas renderer
+│   │   ├── event.ts      # Event system (hit-testing + bubbling)
+│   │   └── index.ts      # Entry + App class
+│   ├── reactivity/       # Reactivity system (ref, reactive, computed, watch)
+│   │   └── index.ts
+│   ├── runtime/          # Runtime (VNode, diff, patch, component)
+│   │   ├── vnode.ts      # VNode types & diff algorithm
+│   │   └── index.ts      # Component system & lifecycle
+│   ├── compiler/         # Template compiler & SFC
+│   │   ├── index.ts      # Template parser & code generator
+│   │   ├── sfc.ts        # .vuvas SFC parser
+│   │   ├── sourcemap.ts  # Source Map support
+│   │   └── vite-plugin.ts # Vite plugin (HMR)
+│   ├── animation/        # Animation system (transition, easing)
+│   │   └── index.ts
+│   ├── router/           # Router (hash/history, guards)
+│   │   └── index.ts
+│   ├── store/            # State management (Pinia-like)
+│   │   └── index.ts
+│   ├── scheduler/        # Batch update scheduler
+│   │   └── index.ts
+│   └── index.ts          # Main entry & exports
+├── demo/                 # Demo page
+│   └── main.ts           # Demo entry
+├── ARCHITECTURE.md       # Architecture design
+├── TASKS.md              # Task tracking
+├── CONTRIBUTING.md       # Contributing guide
+└── CHANGELOG.md          # Changelog
 ```
 
 ## 🤝 Contributing
@@ -119,4 +180,4 @@ Contributions of any kind are welcome! Please read [CONTRIBUTING.md](./CONTRIBUT
 
 ## 📄 License
 
-[MIT](./LICENSE) © Vuvas Contributors
+[MIT](./LICENSE) © Cyrios-ykx

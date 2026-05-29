@@ -1,12 +1,12 @@
-<p align="center">
-  <img src="./public/Vuvas.png" alt="Vuvas Logo" width="180" />
-</p>
-
 # Vuvas
 
 > /vjuːvæs/ — **V**(ue) + Canvas
 
 [English](./README.md) | **中文**
+
+<p align="center">
+  <img src="./public/Vuvas.png" alt="Vuvas Logo" width="180" />
+</p>
 
 <p align="center">
   <strong>Canvas 上的 Vue</strong> —— 一个面向 Canvas 的渐进式 UI 框架
@@ -119,4 +119,4 @@ vuvas/
 
 ## 📄 许可证
 
-[MIT](./LICENSE) © Vuvas Contributors
+[MIT](./LICENSE) © Cyrios-ykx
